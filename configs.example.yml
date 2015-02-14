@@ -1,0 +1,53 @@
+# IRC server name
+server: irc.freenode.net
+# IRC server port
+port: 6667
+# IRC server password, leave empty if none
+server_password:
+
+# Are we debugging?
+debug: true
+# Logging level. >3 will spew all event logs if module-logging is enabled.
+loglevel: 4
+# MOTD.
+motd:
+
+# <nick>!<username>@(host) :<realname>
+nick: IRCBot
+username: IRCBot
+realname: IRCBot
+owner: "*!*@unaffiliated/boxmein"
+
+# Authentication
+auth:
+  type: NickServ
+  name: username
+  password: password
+
+# Command character to respond to
+command_character: "\\"
+
+# Announce character if 'boxnode' and 'character' are in the same irc line
+announce_character: true
+announce_message: "i can be controlled with the following prefix: %char"
+
+# Modules to load
+modules_enabled:
+  - test
+  - hello
+  - nickometer
+  - logging
+
+# Channels to join
+channels:
+  - name: "##boxmein"
+
+# Module-specific configuration.
+modules:
+  test:
+    message: "hello! the command you entered is %cmd"
+  system:
+    authorized:
+      - "*!*@unaffiliated/boxmein"
+      - "*!*@unaffiliated/ristovski"
+

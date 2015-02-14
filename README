@@ -1,0 +1,22 @@
+node-irc-bot-3
+==============
+
+Like the third time I'm remaking node-irc-bot. At least I like it this time :D
+
+## Running
+
+Here's how:
+
+    $ npm install q yamljs eventemitter2 underscore
+    $ node ircbot
+
+## Configuring
+
+First, copy `configs.example.yml` into `configs.yml`.
+The [YAML][yaml] configuration file has comments inside - go read them! :D
+
+[yaml]: http://www.yaml.org/
+
+## Credit
+
+boxmein 2015. see the file LICENSE for a copy-pasted MIT License.
