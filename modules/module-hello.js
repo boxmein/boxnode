@@ -26,3 +26,5 @@ function sanitize(line) {
 exports.listener = function(line, words, respond) {
   return respond('Hello ' + sanitize(words.slice(1).join(' ')));
 };
+
+exports.init = function(config, myconfig, alias) {};
