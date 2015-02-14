@@ -134,8 +134,8 @@ function isValidIRCLine(line) {
 */
 function matchesHostname(a, b) {
   var matcher = new RegExp('^' + a.replace('*', '(.+?)') + '$');
-  console.log(matcher);
-  console.log('matching a to b', a, b);
+  // console.log(matcher);
+  // console.log('matching a to b', a, b);
   return matcher.test(b);
 }
 
