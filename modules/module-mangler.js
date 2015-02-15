@@ -34,7 +34,7 @@ exports.listener = function(line, words, respond) {
   }
 
   if (manglers.hasOwnProperty(ev[1])) {
-    respond(manglers[ev[1]](words.join(' ')));
+    respond(manglers[ev[1]](words.slice(1).join(' ')));
   }
 };
 
