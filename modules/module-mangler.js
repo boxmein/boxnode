@@ -151,7 +151,7 @@ manglers.leetspeak = function(text) {
 };
 
 manglers.sort = function(text) {
-  return _.sort(text, function(ea) { return ea.charCodeAt(0); }).join('');
+  return _.sortBy(text, function(ea) { return ea.charCodeAt(0); }).join('');
 };
 
 manglers.shuffle = function(text) {
