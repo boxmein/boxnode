@@ -182,8 +182,9 @@ function deleteAlias(from) {
 
 // Remove any alias from a command name
 function unalias(aliased) {
-  if (app.aliases.hasOwnProperty(aliased)) {
-    return app.aliases[aliased];
+  var unaliased = aliased;
+  while (app.aliases.hasOwnProperty(unaliased)) {
+    unaliased = app.aliases[unaliased];
   }
   return aliased;
 }
