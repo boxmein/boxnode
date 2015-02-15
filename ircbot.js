@@ -164,11 +164,28 @@ function paramsToString(params) {
   return endstr;
 }
 
+// respond function.
 
 /** Respond to a message in <channel> to <nick>, with <data>. */
 function respond(channel, nick, data) {
-  writeToSocket('PRIVMSG ' + channel + ' :'+ nick + ': ' + data);
+  respond.PRIVMSG(channel, nick + ': ' + data);
 }
+
+// Send PRIVMSG to anything
+respond.PRIVMSG = function(channel, data) {
+  respond.RAW('PRIVMSG ' + channel + ' :' + data);
+};
+
+// Apply MODEs
+respond.MODE = function(channel, mode, target) {
+  respond.RAW('MODE ' + channel + ' ' + mode + ' :'+target);
+};
+
+// Raw IRC for anything else.
+respond.RAW = function(data) {
+  writeToSocket(data.replace(/[\r\n]/g, ''));
+};
+
 
 // Alias system
 
