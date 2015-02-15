@@ -140,14 +140,14 @@ manglers.compress = function(text) {
 
 manglers.leetspeak = function(text) {
   return text.toUpperCase()
-             .replace(/O/, '0')
-             .replace(/I/, '1')
-             .replace(/Z/, '2')
-             .replace(/E/, '3')
-             .replace(/A/, '4')
-             .replace(/S/, '5')
-             .replace(/G/, '6')
-             .replace(/B/, '8');
+             .replace(/O/g, '0')
+             .replace(/I/g, '1')
+             .replace(/Z/g, '2')
+             .replace(/E/g, '3')
+             .replace(/A/g, '4')
+             .replace(/S/g, '5')
+             .replace(/G/g, '6')
+             .replace(/B/g, '8');
 };
 
 manglers.sort = function(text) {
