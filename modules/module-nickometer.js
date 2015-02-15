@@ -1,5 +1,6 @@
 /*
   Nickometer module for this bot
+  ~boxmein
 */
 var nickometer = require('./nickometer');
 
