@@ -29,7 +29,7 @@ exports.listener = function(line, words, respond) {
   var ev = this.event.split('.');
 
   if (ev.length < 2) {
-    respond('you didn\'t specify a mangling type! see `help mangler`');
+    respond('you didn\'t specify a mangling type! see `help mangler` and `list mangler`');
     return;
   }
 
