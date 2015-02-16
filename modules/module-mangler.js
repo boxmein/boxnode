@@ -114,7 +114,7 @@ manglers.gnu = function(text) {
 
 manglers.aol = function(text) {
   var addition = _.sample([
-    '<3', ':D', '~', '!', '.', ':)', ';)'
+    '<3', ':D', '~', '!', '.', ':)', ';)', ':-)', ':^)', ':^y'
   ]);
 
   return text + addition + addition + addition;
