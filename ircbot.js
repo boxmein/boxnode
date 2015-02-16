@@ -37,6 +37,34 @@ var app = {
 };
 
 
+//
+// Mega-error-handlers.
+//
+
+
+app.events.on('error', function() {
+  console.log('\x1b[31;1merror in app.events: ' + arguments + '\x1b[0m');
+});
+
+
+// Unload a module if it throws up
+app.commandevents.on('error', function(err, module, line) {
+  console.log('\x1b[31;1merror in a module:', module.name, err, '\x1b[0m');
+  app.events.emit('module.unload', module.name);
+
+  if (config.announce_module_crash) {
+    var msg = config.announce_module_message || 'module crashed: "%module"';
+    respond(line.params[0], line.nick, msg.replace('%module', module.name));
+  }
+});
+
+// IRC event error? :O
+app.ircevents.on('error', function() {
+  console.log('\x1b[31;1merror in app.ircevents: ' + arguments + '\x1b[0m');
+});
+
+
+
 
 //
 // Some useful functions
@@ -867,16 +895,3 @@ sock.on('error', app.events.emit.bind(app.events, 'sock.error'));
 sock.on('data', app.events.emit.bind(app.events, 'sock.data'));
 sock.on('end', app.events.emit.bind(app.events, 'sock.end'));
 
-// Error handlers
-
-app.events.on('error', function() {
-  console.log('\x1b[31;1m' + arguments + '\x1b[0m');
-});
-
-app.commandevents.on('error', function() {
-  console.log('\x1b[31;1m' + arguments + '\x1b[0m');
-});
-
-app.ircevents.on('error', function() {
-  console.log('\x1b[31;1m' + arguments + '\x1b[0m');
-});
