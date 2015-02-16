@@ -203,10 +203,13 @@ function deleteAlias(from) {
 // Remove any alias from a command name
 function unalias(aliased) {
   var unaliased = aliased;
-  while (app.aliases.hasOwnProperty(unaliased)) {
+
+  // overflow limit = 20 nested aliases
+  var i = 20;
+  while (i --> 0 && app.aliases.hasOwnProperty(unaliased)) {
     unaliased = app.aliases[unaliased];
   }
-  return aliased;
+  return unaliased;
 }
 
 
