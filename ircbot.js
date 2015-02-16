@@ -337,7 +337,16 @@ if (config.auth && config.auth.type == 'NickServ') {
 // Module system
 //
 
-
+// Cushion the listener so the bot won't crash because a module goes down.
+function cushionListener(module) {
+  return function(line, words, respond) {
+    try {
+      module.listener.call(this, line, words, respond);
+    } catch (err) {
+      app.commandevents.emit('error', err, module, line);
+    }
+  };
+}
 
 
 // New module added (only when you add via require())
@@ -353,8 +362,8 @@ app.events.on('module.new', function(name) {
     require.cache[module.path] = undefined;
 
     // disable the events that we hooked
-    app.commandevents.off(module.name, module.listener);
-    app.commandevents.off([module.name, '*'], module.listener);
+    app.commandevents.off(module.name, module._listener);
+    app.commandevents.off([module.name, '*'], module._listener);
 
     delete app.modules[module.name];
   };
@@ -371,6 +380,8 @@ app.events.on('module.new', function(name) {
 
   app.events.emit('module.newbare', module);
 });
+
+
 
 // Add a bare module - don't need to require()
 app.events.on('module.newbare', function(module) {
@@ -408,8 +419,11 @@ app.events.on('module.newbare', function(module) {
     if (!module.listAll)
       module.listAll = function() { return ['no', 'list', 'defined', ':^('] };
 
-    app.commandevents.on(module.name, module.listener);
-    app.commandevents.on([module.name, '*'], module.listener);
+    // use a cushioned event listener that responds to throwing
+    module._listener = cushionListener(module);
+
+    app.commandevents.on(module.name, module._listener);
+    app.commandevents.on([module.name, '*'], module._listener);
   }
 
   // This module wants to hook onto events or emit them
