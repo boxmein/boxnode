@@ -797,7 +797,7 @@ if (config.announce_character) {
 
     if (text.indexOf(config.nick) !== -1) {
       if (text.indexOf('control') !== -1 ||
-          text.indexOf('command') !== -1 ||
+          // text.indexOf('command') !== -1 ||
           text.indexOf('character') !== -1 ||
           text.indexOf('prefix') !== -1) {
         respond(chan, user, config.announce_character_message.replace('%char',
