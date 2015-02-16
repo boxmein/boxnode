@@ -110,5 +110,6 @@ exports.listener = function(line, words, respond) {
 */
 exports.init = function(config, myconfig, alias) {
   console.log('initialized test with ', myconfig);
+  alias('thing', 'test.do_the_thing');
   message = myconfig.message;
 };
