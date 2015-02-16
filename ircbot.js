@@ -375,24 +375,32 @@ app.events.on('module.new', function(name) {
 // Add a bare module - don't need to require()
 app.events.on('module.newbare', function(module) {
 
-  if (!module.type)
-    throw new Error('module ' + module.name + ' has no .type property');
+  // silently refuse to finish loading if we're missing key properties
+  if (!module.type ||
+      !module.name ||
+      !module.listener) {
+    app.events.emit('module.error', module);
+    return;
+  }
 
   module.type = module.type.toLowerCase();
   module.reload = module.reload || function() {};
 
-  if (!module.name) throw new Error('module.newbare fired without a name property');
-
-  // This module is an IRC command
+  // This module is an IRC command module. pass it some generic stuff and
+  // don't make it worry about hooking onto event streams.
   if (module.type == 'command') {
 
     // Init function can read configuration and specific configuration
     // It can also add aliases.
-    if (module.init)
-      module.init(config, config.modules[module.name], addAlias);
-
-    if (!module.listener)
-      throw new Error("command module " + module.name + " has no .listener()");
+    // If init function throws, then don't load the module.
+    if (module.init && typeof module.init == 'function') {
+      try {
+        var ret = module.init(config, config.modules[module.name], addAlias);
+      } catch (err) {
+        app.events.emit('module.errorinit', module);
+      }
+      // can do something here with the init return value...
+    }
 
     if (!module.getHelp)
       module.getHelp = function() { return {'*': 'no help defined :^('}; };
@@ -407,8 +415,11 @@ app.events.on('module.newbare', function(module) {
   // This module wants to hook onto events or emit them
   else if (module.type == 'event') {
 
-    if (!module.init)
-      throw new Error("event module " + module.name + " has no .init()");
+    // also silently fail
+    if (!module.init) {
+      app.events.init('module.errorinit', module);
+      return;
+    }
 
     module.init(config, app.events, app.ircevents, app.commandevents);
   }
