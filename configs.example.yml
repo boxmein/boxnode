@@ -1,24 +1,39 @@
+##
+## Self-describing configuration for this IRC bot.
+## To set up your own configuration, simply copy-paste this as
+## 'configs.yml' and start tweaking the values :D
+##
+
 # IRC server name
 server: irc.freenode.net
+
 # IRC server port
 port: 6667
+
 # IRC server password, leave empty if none
 server_password:
 
 # Are we debugging?
 debug: true
-# Logging level. >3 will spew all event logs if module-logging is enabled.
+
+# Logging level.
+# Log level >2 will enable event stream logging (from module-logging.js).
+# Log level >3 will also enable dumping the event stream's attachments (say
+# the event for module.new attaches the module itself to the event)
 loglevel: 4
-# MOTD.
+
+# MOTD. gets displayed into the console on startup if not empty
 motd:
 
 # <nick>!<username>@(host) :<realname>
 nick: IRCBot
 username: IRCBot
 realname: IRCBot
+
+# this basically always gets authorization in `system` module commands
 owner: "*!*@unaffiliated/boxmein"
 
-# Authentication
+# Authentication - leave everything empty if you don't need it.
 auth:
   type: NickServ
   name: username
@@ -27,22 +42,28 @@ auth:
 # Command character to respond to
 command_character: "\\"
 
-# Announce character if 'boxnode' and 'character' are in the same irc line
+# tell people your command character
+# if the nickname and one of the following words is in a single line:
+# 'character', 'command', 'control'
 announce_character: true
 announce_message: "i can be controlled with the following prefix: %char"
 
-# Modules to load
+# Modules to load on startup.
 modules_enabled:
   - test
   - hello
   - nickometer
   - logging
 
-# Channels to join
+# Channels to join: a list of objects with name being the channel name.
+# Future feature is that you could configure global properties specific
+# to different channels, eg the command character.
 channels:
   - name: "##boxmein"
 
 # Module-specific configuration.
+# Every module gets their own object here - omit if you don't want to
+# configure a module. Modules should define reasonable defaults.
 modules:
   test:
     message: "hello! the command you entered is %cmd"
@@ -50,4 +71,3 @@ modules:
     authorized:
       - "*!*@unaffiliated/boxmein"
       - "*!*@unaffiliated/ristovski"
-
