@@ -501,8 +501,6 @@ app.commandevents.on('help', function(line, words, respond) {
                    'modules if the module argument is omitted');
   }
 
-
-
   if (app.modules.hasOwnProperty(term) &&
       app.modules[term].type == 'command') {
     var help = app.modules[term].getHelp();
@@ -516,13 +514,6 @@ app.commandevents.on('help', function(line, words, respond) {
       return respond(help['*']);
     }
   }
-});
-
-
-
-// Alias system: list all aliases.
-app.commandevents.on('aliases', function(line, words, respond) {
-  respond(_.keys(app.aliases));
 });
 
 
@@ -577,11 +568,7 @@ app.events.emit('module.newbare', {
       'nick':  '`nick <new-name>` - set your IRC nickname to a new value',
 
       'raw':   '`raw <raw-irc...>` - send raw IRC protocol',
-      'eval':  '`eval <code...>` - evaluate Javascript code just like that',
-
-      'alias': '`alias <from> <to>` - rename the <to> command to <from>',
-      'unalias': '`unalias <from>` - say what an alias refers to',
-      'rmalias': '`rmalias <from>` - delete an alias'
+      'eval':  '`eval <code...>` - evaluate Javascript code just like that'
     };
   },
 
@@ -651,31 +638,95 @@ app.events.emit('module.newbare', {
         }
         break;
 
-      // system.alias <from> <to...>
-      case 'alias':
-        if (words.length < 3)
-          return respond('Invalid syntax, try `help system.alias`');
-        addAlias(words[1], words.slice(2).join(' '));
-        respond('New alias: `' + words[1] + '` -> `' + words[2] + '`');
-        break;
 
-      // system.unalias <alias>
-      case 'unalias':
-        if (!words[1])
-          return respond('Missing <alias>, try `help system.unalias`');
-        respond('Alias `'+words[1] + '` refers to `' + unalias(words[1]) + '`');
-        break;
+// Alias editor
+app.events.emit('module.newbare', (function() {
+  var myconf = config.modules.alias || {'whitelist': false};
+  return {
+    type: 'command',
+    name: 'alias',
+    listAll: function() {
+      return ['*', 'add', 'remove', 'unalias', 'list'];
+    },
 
-      // system.rmalias <alias>
-      case 'rmalias':
-        if (!words[1])
-          return respond('Missing alias, try `help system.rmalias`');
-        deleteAlias(words[1]);
-        respond('Alias `'+words[1] + '` deleted.');
-        break;
+    getHelp: function() {
+      return {
+      '*': 'same as `alias.add`',
+      'add': '`alias.add <from> <to>` - add new alias converting <from> to <to>',
+      'remove': '`alias.remove <al>` - remove a specific alias',
+      'unalias': '`alias.unalias <al>` - convert an alias to what it actually means',
+      'list': '`alias.list` - list all aliases known'
+      }
+    },
+
+    init: function(config, myconfig, als) {
+      als('aa', 'alias.add');
+      als('ar', 'alias.remove');
+      als('ua', 'alias.unalias');
+      als('al', 'alias.list');
+    },
+
+    listener: function(line, words, respond) {
+
+      var ev = this.event.split('.');
+      if (ev.length < 2)
+        ev[1] = 'add';
+
+      var AUTHORIZED = false;
+
+      // hostmask-based authorization
+      if (myconf.whitelist === false) {
+        AUTHORIZED = true;
+      }
+      else if (myconf.whitelist === true) {
+        AUTHORIZED = matchesHostname(config.owner, line.hostmask);
+      }
+      else if (myconf.whitelist instanceof Array) {
+
+        for (var i = 0; i < myconf.whitelist.length; i++) {
+          if (matchesHostname(myconf.whitelist[i], line.hostmask)) {
+            AUTHORIZED = true;
+            break;
+          }
+        }
+
+      }
+
+      switch (ev[1]) {
+
+        case 'unalias':
+          if (!words[1])
+            return respond('Missing <alias>, try `help alias.unalias`');
+          respond('Alias `'+words[1] + '` refers to `' + unalias(words[1]) + '`');
+          break;
+
+        case 'list':
+          respond(_.keys(app.aliases));
+          break;
+
+        case 'add':
+          if (!AUTHORIZED)
+            return respond('You can\'t do that!');
+
+          if (words.length < 3)
+            return respond('Invalid syntax! See `help alias.add`');
+          addAlias(words[1], words.slice(2).join(' '));
+          respond('New alias: `' + words[1] + '` -> `' + words[2] + '`');
+          break;
+
+        case 'remove':
+          if (!AUTHORIZED)
+            return respond('You can\'t do that!');
+
+          if (!words[1])
+            return respond('Missing alias, try `help alias.remove`');
+          deleteAlias(words[1]);
+          respond('Alias `'+words[1] + '` deleted.');
+          break;
+      }
     }
-  }
-});
+  };
+})());
 
 
 
