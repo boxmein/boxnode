@@ -6,7 +6,10 @@ var net     = require('net')
   , YAML    = require('yamljs')
   , Emitter = require('eventemitter2').EventEmitter2;
 
-var config = YAML.load('configs.yml');
+
+// Set up reasonable defaults for what we can default to
+var config = _.defaults(YAML.load('configs.yml'),
+                        YAML.load('configs.default.yml'));
 
 var DEBUG = config.debug || process.env['DEBUG'] || true;
 // stolen from https://github.com/SBSTP/irc/blob/master/constants.go

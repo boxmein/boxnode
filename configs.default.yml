@@ -1,0 +1,32 @@
+
+server: irc.freenode.net
+port: 6667
+server_password:
+
+debug: true
+loglevel: 4
+motd:
+
+nick: boxnode
+username: boxnode
+realname: "boxnode #7000 or so"
+owner: "*!*@unaffiliated/boxmein"
+
+auth:
+
+command_character: "\\"
+
+announce_character: true
+announce_message: "i can be controlled with the following prefix: %char"
+
+modules_enabled:
+  - logging
+  - test
+
+channels:
+  - name: "##boxmein"
+
+modules:
+  test:
+    message: "hello! the command you entered is %cmd"
+
