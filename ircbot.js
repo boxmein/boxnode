@@ -789,6 +789,7 @@ app.events.emit('module.newbare', {
 
 // Announce its own character if my name and some specific words are mentioned
 if (config.announce_character) {
+  config.announce_character_message = config.announce_character_message || "just use %char";
   app.ircevents.on('PRIVMSG', function(line) {
     var chan = line.params[0];
     var user = line.nick;
@@ -799,7 +800,7 @@ if (config.announce_character) {
           text.indexOf('command') !== -1 ||
           text.indexOf('character') !== -1 ||
           text.indexOf('prefix') !== -1) {
-        respond(chan, user, config.announce_message.replace('%char',
+        respond(chan, user, config.announce_character_message.replace('%char',
                             config.command_character));
       }
     }
