@@ -572,6 +572,18 @@ app.events.emit('module.newbare', {
     };
   },
 
+  init: function(c, m, alias) {
+    alias('quit', 'system.quit');
+    alias('join', 'system.join');
+    alias('part', 'system.part');
+    alias('nick', 'system.nick');
+    alias('raw' , 'system.raw' );
+    alias('eval', 'system.eval');
+    alias('aa'  , 'system.alias');
+    alias('ua'  , 'system.unalias');
+    alias('ra'  , 'system.rmalias');
+  },
+
   listener: function(line, words, respond) {
     var permission = false;
 
@@ -743,6 +755,12 @@ app.events.emit('module.newbare', {
     'load':   '`load <module-name>` - load the module specified by the name',
     'unload': '`unload <module-name>` - unload the module'
   }},
+
+  init: function(c, m, alias) {
+    alias('reload', 'module.reload');
+    alias('load', 'module.load');
+    alias('unload', 'module.unload');
+  },
 
   listener: function(line, words, respond) {
     if (!matchesHostname(config.owner, line.prefix)) {
