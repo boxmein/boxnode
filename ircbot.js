@@ -637,6 +637,9 @@ app.events.emit('module.newbare', {
           respond(err.message);
         }
         break;
+    }
+  }
+});
 
 
 // Alias editor
