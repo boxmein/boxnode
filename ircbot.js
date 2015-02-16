@@ -12,6 +12,7 @@ var config = _.defaults(YAML.load('configs.yml'),
                         YAML.load('configs.default.yml'));
 
 var DEBUG = config.debug || process.env['DEBUG'] || true;
+
 // stolen from https://github.com/SBSTP/irc/blob/master/constants.go
 var C = require('./constants.json');
 var _C = _.invert(C);
@@ -469,6 +470,7 @@ app.events.on('module.newbare', function(module) {
   app.modules[module.name] = module;
 });
 
+
 app.events.on('module.reload', function(name) {
   if (!app.modules.hasOwnProperty(name))
     return;
@@ -476,12 +478,14 @@ app.events.on('module.reload', function(name) {
     app.modules[name].reload();
 });
 
+
 app.events.on('module.unload', function(name) {
   if (!app.modules.hasOwnProperty(name))
     return;
   if (app.modules[name].unload)
     app.modules[name].unload();
 });
+
 
 
 // Quit handlers
@@ -553,6 +557,7 @@ function getCommandModuleNames() {
     return app.modules[ea].type == 'command';
   });
 }
+
 
 // Command-listing system
 app.commandevents.on('list', function(line, words, respond) {
