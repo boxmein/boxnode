@@ -367,7 +367,87 @@ app.ircevents.on('PRIVMSG', function(line) {
 
 
 
+//
+// IRC Events
+//
+
+
+
 app.ircevents.on('Welcome', app.events.emit.bind(app.events, 'ready'));
+
+
+// Parse ISUPPORT lines, might be useful!
+app.ircevents.on('ISupport', function(line) {
+  var supports = line.params.slice(1, -1);
+
+  _.each(supports, function(ea) {
+    var es = ea.split('=');
+    app.state.isupport[es[0]] = es[1] || true;
+  });
+});
+
+
+app.ircevents.on('JOIN', function(line) {
+  var channel = line.params[0]
+    , channels = app.state.channels;
+
+  if (!channel || channel == '')
+    return;
+
+  // ignore own joins
+  if (line.nick == config.nick)
+    return;
+
+  channels[channel] = channels[channel] || [];
+
+  if (channels[channel].indexOf(line.nick) !== -1) {
+    console.warn(line.nick, 'is already in this channel!');
+  }
+
+  channels[channel].push(line.nick);
+});
+
+
+app.ircevents.on('PART', function(line) {
+  var channel = line.params[0]
+    , channels = app.state.channels;
+
+  if (!channel || channel == '')
+    return;
+
+  var i = -1;
+  if (channels[channel] &&
+      (i = channels[channel].indexOf(line.nick)) !== -1) {
+    channels[channel].splice(i, 1);
+    return;
+  } else {
+    // lol wtf
+    console.warn('wtf??? someone left a channel they weren\'t in');
+  }
+});
+
+
+app.ircevents.on('NamReply', function(line) {
+  var channel = line.params[2]
+    , channels = app.state.channels;
+
+  if (!channel || channel == '')
+    return;
+
+  channels[channel] = channels[channel] || [];
+
+  var nicks = line.params[3].split(' ');
+
+  _.each(nicks, function(ea) {
+    if (channels[channel].indexOf(line.nick) !== -1) {
+      console.warn(line.nick, 'is already in this channel!');
+      return;
+    }
+    channels[channel].push(ea);
+  });
+});
+
+
 
 // Ready to join/do everything
 app.events.on('ready', function(line) {
