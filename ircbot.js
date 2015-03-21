@@ -352,9 +352,15 @@ app.ircevents.on('PRIVMSG', function(line) {
 
       var command = words[0].slice(command_char.length);
 
+      // clone respond's methods to newrespond
+      var newrespond = respond.bind({}, line.params[0], line.nick);
+      for (var k in respond) {
+        newrespond[k] = respond[k];
+      }
+
+
       app.commandevents.emit(unalias(command),
-        line, words,
-        respond.bind({}, line.params[0], line.nick));
+        line, words, newrespond);
     }
   }
 });
