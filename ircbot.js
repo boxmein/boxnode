@@ -726,6 +726,7 @@ app.events.emit('module.newbare', {
     alias('aa'  , 'system.alias');
     alias('ua'  , 'system.unalias');
     alias('ra'  , 'system.rmalias');
+    alias('echo', 'system.echo');
   },
 
   listener: function(line, words, respond) {
@@ -755,6 +756,10 @@ app.events.emit('module.newbare', {
       case 'die':
       case 'quit':
         app.events.emit('quit.graceful', 'owner sent a quit command');
+        break;
+
+      case 'echo':
+        respond.PRIVMSG(line.channel, words.join(' '));
         break;
 
       // system.join <channel>
