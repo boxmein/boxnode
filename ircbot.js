@@ -534,8 +534,8 @@ app.events.on('module.newbare', function(module) {
 
   // silently refuse to finish loading if we're missing key properties
   if (!module.type ||
-      !module.name ||
-      !module.listener) {
+     (module.type == 'command' && !module.listener) ||
+     (module.type == 'event'   && !module.init)){
     app.events.emit('module.error', module);
     return;
   }
@@ -574,6 +574,7 @@ app.events.on('module.newbare', function(module) {
 
   // This module wants to hook onto events or emit them
   else if (module.type == 'event') {
+    console.log(module);
 
     // also silently fail
     if (!module.init) {
