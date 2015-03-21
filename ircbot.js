@@ -245,6 +245,28 @@ function unalias(aliased) {
 }
 
 
+// is this nickname an operator in that channel?
+// returns a promise!
+function isOperatorIn(nick, channel) {
+  var def = Q.defer();
+
+  app.ircevents.once('WhoisChannels', function(line) {
+    var chans = line.params.slice(2);
+
+    if (chans.length == 0)
+      def.reject(chans.length);
+
+    _.each(chans, function(ea) {
+      if (ea.indexOf(channel) !== -1) {
+        def.resolve(true);
+      }
+    });
+
+    def.resolve(false);
+  });
+
+  return def.promise;
+}
 
 
 //
