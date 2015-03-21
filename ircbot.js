@@ -31,7 +31,10 @@ var app = {
   modules: {},
 
   // state store for stuff like channel nick lists
-  state: {},
+  state: {
+    channels: {},
+    isupport: {}
+  },
 
   // command aliases
   aliases: {}
