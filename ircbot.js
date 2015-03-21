@@ -458,7 +458,6 @@ app.events.on('ready', function(line) {
 });
 
 
-
 // Nickserv authentication
 if (config.auth && config.auth.type == 'NickServ') {
   app.ircevents.on('Notice', function(line) {
@@ -493,7 +492,14 @@ function cushionListener(module) {
 app.events.on('module.new', function(name) {
   console.log('new module: ' + name);
 
-  var module = require('./modules/module-' + name + '.js');
+  try {
+    var module = require('./modules/module-' + name + '.js');
+  }
+  catch (err) {
+    console.error('Failed to load module `'+name+'`: ', err.message);
+    app.events.emit('module.loadfail', name, err);
+    return;
+  }
 
   module.name = name;
   module.path = require.resolve('./modules/module-' + name + '.js');
