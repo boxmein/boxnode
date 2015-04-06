@@ -53,7 +53,10 @@ exports.listener = function(line, words, respond) {
   }
 
   if (manglers.hasOwnProperty(ev[1])) {
-    respond(manglers[ev[1]](words.slice(1).join(' ')));
+    console.log(ev[1]);
+    respond(
+      manglers[ev[1]](words.slice(1).join(' '), words)
+    );
   }
 };
 
