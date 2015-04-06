@@ -440,7 +440,7 @@ app.ircevents.on('PRIVMSG', function(line) {
 
 
       app.commandevents.emit(unalias(command),
-        line, words, newrespond);
+        line, words, newrespond, app.util);
     }
   }
 });
@@ -509,6 +509,7 @@ app.ircevents.on('JOIN', function(line) {
 });
 
 
+
 app.ircevents.on('PART', function(line) {
   var channel = line.params[0]
     , channels = app.state.channels;
@@ -538,6 +539,8 @@ app.events.on('ready', function(line) {
     return ea.name;
   }).join(','));
 });
+
+
 
 
 // Nickserv authentication
