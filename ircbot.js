@@ -354,8 +354,6 @@ function isOperatorIn(nick, channel) {
 //
 
 
-
-
 // Connection handshake
 app.events.on('sock.connect', function() {
 
@@ -363,6 +361,7 @@ app.events.on('sock.connect', function() {
 
   if (config.server_password)
     writeToSocket('PASS ' + config.server_password);
+
   writeToSocket('NICK ' + config.nick);
   writeToSocket('USER ' + config.username + ' * * :' + config.realname);
 });
@@ -497,13 +496,14 @@ app.ircevents.on('JOIN', function(line) {
   if (line.nick == config.nick)
     return;
 
-  channels[channel] = channels[channel] || [];
+  channels[channel] = channels[channel] || {};
+  channels[channel].names = channels[channel].names || [];
 
   if (channels[channel].indexOf(line.nick) !== -1) {
     console.warn(line.nick, 'is already in this channel!');
   }
 
-  channels[channel].push(line.nick);
+  channels[channel].names.push(line.nick);
 });
 
 
@@ -516,8 +516,9 @@ app.ircevents.on('PART', function(line) {
 
   var i = -1;
   if (channels[channel] &&
-      (i = channels[channel].indexOf(line.nick)) !== -1) {
-    channels[channel].splice(i, 1);
+      channels[channel].names &&
+      (i = channels[channel].names.indexOf(line.nick)) !== -1) {
+    channels[channel].names.splice(i, 1);
     return;
   } else {
     // lol wtf
