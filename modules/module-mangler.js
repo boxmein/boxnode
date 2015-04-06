@@ -13,10 +13,7 @@ exports.type = 'command';
 var manglers = {};
 
 exports.listAll = function() {
-  return [
-    '*', 'rot13', 'k3wlt0k', 'reduct', 'reverse', 'n20e', 'gnu', 'aol',
-    'uppercase', 'titlecase', 'lowercase', 'leetspeak', 'sort', 'shuffle'
-  ];
+  return Object.keys(manglers);
 };
 
 exports.getHelp = function() {
