@@ -18,7 +18,27 @@ exports.listAll = function() {
 
 exports.getHelp = function() {
   return {
-    '*': ' `mangler.<type> <text...>` - mangle text using a specific algorithm'
+    '*': ' `mangler.<type> <text...>` - mangle text using a specific algorithm',
+    'rot13': '`mangler.rot13 <text..>` - ROT13 some text',
+    'k3wlt0k': '`mangler.k3wlt0k <text...>` - kewltalk (try it!)',
+    'reduct': '`mangler.reduct <text...>` - reduct a piece of text (rmvng vcls, etc)',
+    'reverse': '`mangler.reverse <text...>` - sseug yam uoy sa ,txet sesrever siht',
+    'n20e': '`mangler.n20e <text...>` - numericalize words (eg internationalization -> i18n)',
+    'gnu': '`mangler.gnu <text...>` - GNU/adds GNU/GNU GNU/to GNU/everything',
+    'aol': '`mangler.aol <text...>` - replicates AIM messages well<3<3<3',
+    'uppercase': '`mangler.uppercase <text...>` - LOUDLY YELLING',
+    'titlecase': '`mangler.titlecase <text...>` - Title Case Is Too Proper',
+    'lowercase': '`mangler.lowercase <text...>` - lowercase is best case',
+    'leetspeak': '`mangler.leetspeak <text...>` - WR1T35 3V3RYTH1N6 1N L33T5P34K',
+    'sort': '`mangler.sort <text...>` - sort each character',
+    'shuffle': '`mangler.shuffle <text...>` - LOUDLY YELLING',
+    'letterfreqs': '`mangler.letterfreqs <text...>` - compute letter frequencies of the text',
+    'flip': '`mangler.flip <text...>` - flips the text vertically',
+    'fliprev': '`mangler.fliprev <text...>` - flips the text vertically /AND/ horizontally',
+    'compress': '`mangler.compress <text...>` - compressesthetextbyremovingallunnecessaryspace',
+    'hash': '`mangler.hash <type> <text...>` - digest the given text using a hash algorithm (openssl)',
+    'encipher': '`mangler.encipher <type> <password> <text...>` - encipher the given text',
+    'decipher': '`mangler.decipher <type> <password> <hex digest...>` - decipher the given hex digest',
   };
 };
 
