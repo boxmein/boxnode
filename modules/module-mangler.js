@@ -146,7 +146,7 @@ manglers.n20e = function(text) {
 
 
 manglers.gnu = function(text) {
-  return 'GNU/' + text;
+  return text.split(' ').map(function(ea) { return 'GNU/'+ea; }).join(' ');
 };
 
 
