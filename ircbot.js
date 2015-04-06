@@ -32,8 +32,18 @@ var app = {
 
   // state store for stuff like channel nick lists
   state: {
+    // channel objects containing list of nicks
     channels: {},
-    isupport: {}
+
+    // RPL_ISUPPORT things
+    isupport: {},
+
+    // common chars for different levels of authority
+    // will update to match server characters
+    OP_CHAR: '@',
+    VOICE_CHAR: '+'
+  },
+
   // utility functions
   util: {
     // parseIRCLine
@@ -453,8 +463,27 @@ app.ircevents.on('ISupport', function(line) {
   _.each(supports, function(ea) {
     var es = ea.split('=');
     app.state.isupport[es[0]] = es[1] || true;
+
+    // find out the op/voice chars
+    if(es[0] == 'PREFIX') {
+
+      if (DEBUG)
+        console.log('Found PREFIX line - setting OP_CHAR and VOICE_CHAR');
+      // "(ov)@+"
+      // index the o and v chars, and add them to app.state.OP_CHAR/VOICE_CHAR
+      var rparen = es[1].indexOf(')');
+      var op = es[1].indexOf('o');
+      var voice = es[1].indexOf('v');
+
+      app.state.OP_CHAR = es[1][rparen + op];
+      app.state.VOICE_CHAR = es[1][rparen + voice];
+
+      if (DEBUG)
+        console.log(app.state.OP_CHAR, app.state.VOICE_CHAR);
+    }
   });
 });
+
 
 
 app.ircevents.on('JOIN', function(line) {
