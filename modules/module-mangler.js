@@ -6,6 +6,7 @@
 */
 
 var _ = require('underscore');
+var crypto = require('crypto');
 
 exports.type = 'command';
 
@@ -274,5 +275,92 @@ manglers.fliprev = function(text) {
 
 
 
+manglers.hash = function(unused, words) {
 
+  if (!words[1]) {
+    return 'no algorithm specified! see `help mangler.hash`';
+  }
+
+  var text = words.slice(2);
+
+  if (text.length == 0)
+    return 'no text! see `help mangler.hash`';
+
+  text = text.join(' ');
+
+  try {
+    var h = crypto.createHash(words[1]);
+    h.update(text, 'utf8');
+
+    var digest = h.digest('hex');
+    return digest;
+  }
+  catch (err) {
+    return 'error: ' + err.message;
+  }
+};
+
+
+
+
+manglers.encipher = function(unused, words) {
+
+  if (!words[1]) {
+    return 'no algorithm specified! see `help mangler.encipher`';
+  }
+
+  if (!words[2]) {
+    return 'no password specified! see `help mangler.encipher`';
+  }
+
+  var text = words.slice(3);
+
+  if (text.length == 0)
+    return 'no text! see `help mangler.encipher`';
+
+  text = text.join(' ');
+
+  try {
+    var h = crypto.createCipher(words[1], new Buffer(words[2], 'utf8'));
+    h.update(text, 'utf8');
+
+    var digest = h.final('hex');
+    return digest;
+  }
+  catch (err) {
+    return 'error: ' + err.message;
+  }
+};
+
+
+
+
+
+manglers.decipher = function(unused, words) {
+
+  if (!words[1]) {
+    return 'no algorithm specified! see `help mangler.decipher`';
+  }
+
+  if (!words[2]) {
+    return 'no password specified! see `help mangler.decipher`';
+  }
+
+  var text = words.slice(3);
+
+  if (text.length == 0)
+    return 'no text! see `help mangler.decipher`';
+
+  text = text.join(' ');
+
+  try {
+    var h = crypto.createDecipher(words[1], new Buffer(words[2], 'utf8'));
+    h.update(text, 'hex');
+
+    var digest = h.final('utf8');
+    return digest;
+  }
+  catch (err) {
+    return 'error: ' + err.message;
+  }
 };
