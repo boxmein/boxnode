@@ -209,6 +209,43 @@ manglers.sort = function(text) {
   return _.sortBy(text, function(ea) { return ea.charCodeAt(0); }).join('');
 };
 
+
+
+
+manglers.letterfreqs = function(text) {
+  text = text.toLowerCase().replace(/[^a-z]/g, '');
+
+    if (text == '')
+    return 'enter some text - only A-Z count!';
+
+  var total = text.length;
+  var tallies = _.countBy(text, _.identity);
+
+  var endstr = 'Letter frequencies: ';
+
+  var sorted_tallies = [];
+
+  for (var k in tallies) {
+    var obj = {};
+    obj.letter=k;
+    obj.freq = tallies[k] / total;
+    sorted_tallies.push(obj);
+  }
+
+  sorted_tallies = _.map(
+    _.sortBy(sorted_tallies, function(each) {
+      return 100 - each.freq * 100;
+    }), function(each) {
+      return each.letter + ": " + (each.freq * 100).toFixed(2) + '%';
+  }).join(' ');
+
+  return sorted_tallies;
+};
+
+
+
+
+
 manglers.shuffle = function(text) {
   return _.shuffle(text).join('');
 };
