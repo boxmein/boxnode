@@ -250,7 +250,29 @@ manglers.shuffle = function(text) {
   return _.shuffle(text).join('');
 };
 
-var FLIP_TABLE = 'z\u028ex\u028d\u028cn\u0287s\u0279bdou\u026f\u05df\u029e\u0638\u0131\u0265b\u025f\u01ddp\u0254q\u0250';
+
+
+
+
+
+
+var FLIP_TABLE = 'z\u028ex\u028d\u028cn\u0287s\u0279bdou\u026f\u05df\u029e\u0638\u0131\u0265b\u025f\u01ddp\u0254q\u0250'.split('').reverse().join('');
+var A_CODE = 'a'.charCodeAt(0);
 manglers.flip = function(text) {
+  text = text.toLowerCase();
+  return _.map(text, function(ea) {
+    return FLIP_TABLE[ea.charCodeAt(0) - A_CODE] || ea;
+  }).join('');
+};
+
+
+
+manglers.fliprev = function(text) {
+  return manglers.flip(text).split('').reverse().join('');
+};
+
+
+
+
 
 };
