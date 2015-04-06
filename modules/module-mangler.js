@@ -1,8 +1,8 @@
 /*
   Text-mangling module for this bot
 
-  Based on the perl module Text::Bastardize v0.06 by Julian Fondren (1999)
-  The module was licensed under the GPL.
+  Partially based on the perl module Text::Bastardize v0.06 by
+  Julian Fondren (1999). The module was licensed under the GPL.
 */
 
 var _ = require('underscore');
