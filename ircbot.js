@@ -34,10 +34,18 @@ var app = {
   state: {
     channels: {},
     isupport: {}
+  // utility functions
+  util: {
+    // parseIRCLine
+    // matchesHostname
+    // getNames
+    // isOperatorIn
+    // isVoiceIn
   },
 
   // command aliases
   aliases: {}
+
 };
 
 
@@ -201,6 +209,65 @@ function paramsToString(params) {
 }
 
 /** Is this word a channel? */
+function isChannel(a) {
+  return a.indexOf('#') === 0;
+}
+
+
+/** List all names in a channel.
+  * Pass a true for the second parameter to force reloading the names list.
+  * Returns a promise!
+  */
+function getNames(channel, force_update) {
+
+  var def = Q.defer();
+
+  var names = [];
+
+  if (!force_update &&
+      app.state.channels[channel] &&
+      app.state.channels[channel].names &&
+      app.state.channels[channel].names.length > 0) {
+
+    def.resolve(app.state.channels[channel].names);
+    return def.promise;
+  }
+
+  // set up handlers
+  function namReply(data) {
+    // console.log('NamReply', arguments);
+    names.push(data.params[3].split(' '));
+  }
+
+  app.ircevents.on('NamReply', namReply);
+
+  app.ircevents.once('EndOfNames', function() {
+
+    app.ircevents.off('NamReply', namReply);
+    names = _.flatten(names);
+
+    // cache results because we're cool
+
+    if (!app.state.channels[channel])
+      app.state.channels[channel] = {};
+
+    app.state.channels[channel].names = names;
+    def.resolve(names);
+  });
+
+  // ask for all NAMES in the channel.
+  respond.RAW('NAMES ' + channel);
+
+  return def.promise;
+}
+
+app.util.parseIRCLine = parseIRCLine;
+app.util.matchesHostname = matchesHostname;
+app.util.getNames = getNames;
+app.util.isChannel = isChannel;
+
+
+
 // respond function.
 
 /** Respond to a message in <channel> to <nick>, with <data>. */
