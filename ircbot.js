@@ -77,7 +77,7 @@ app.ircevents.on('error', function() {
 
 
 
-/* Parse a line of IRC into an object.
+/** Parse a line of IRC into an object.
 
   ":NickServ!NickServ@services. NOTICE boxnode :You gotta identify bro\r\n"
   :<prefix>                     <num>  <params...>                    \r\n
@@ -156,7 +156,7 @@ function parseIRCLine(ea) {
 }
 
 
-// Is this IRC line valid?
+/** Is this IRC line valid? */
 function isValidIRCLine(line) {
   return !(line.prefix == '' ||
            line.command == undefined);
@@ -164,9 +164,9 @@ function isValidIRCLine(line) {
 
 
 /** Return if a hostname matches a pattern.
-    Patterns are regexes where * completes to (.+?) and the entire thing is
-    surrounded with ^ and $.
-*/
+  * Patterns are regexes where * completes to (.+?) and the entire thing is
+  * surrounded with ^ and $.
+  */
 function matchesHostname(a, b) {
   var matcher = new RegExp('^' + a.replace(/[\*]/g, '(.+?)') + '$');
   // console.log(matcher);
@@ -183,7 +183,8 @@ function writeToSocket(data) {
 
 
 /** Turns the params array returned by parseIRCLine back into an IRC-valid param
-    string. Prepends a : to the first param with a space in it. */
+  * string. Prepends a : to the first param with a space in it.
+  */
 function paramsToString(params) {
   var endstr = '';
   for (var i=0;i<params.length;i++) {
@@ -199,6 +200,7 @@ function paramsToString(params) {
   return endstr;
 }
 
+/** Is this word a channel? */
 // respond function.
 
 /** Respond to a message in <channel> to <nick>, with <data>. */
@@ -243,6 +245,7 @@ function unalias(aliased) {
   }
   return unaliased;
 }
+
 
 
 // is this nickname an operator in that channel?
