@@ -334,10 +334,21 @@ function isOperatorIn(nick, channel) {
              each[0] == app.state.OP_CHAR;
     });
   });
-
-  return def.promise;
 }
 
+// is this nickname voiced in that channel?
+// returns a promise!
+function isVoiceIn(nick, channel) {
+  return getNames(channel).then(function(names) {
+    return !!_.any(names, function(each) {
+       return each.indexOf(nick) === 1 &&
+              each[0] == app.state.VOICE_CHAR;
+    });
+  });
+}
+
+app.util.isOperatorIn = isOperatorIn;
+app.util.isVoiceIn = isVoiceIn;
 
 //
 // Event handlers
