@@ -563,9 +563,9 @@ if (config.auth && config.auth.type == 'NickServ') {
 
 // Cushion the listener so the bot won't crash because a module goes down.
 function cushionListener(module) {
-  return function(line, words, respond) {
+  return function(line, words, respond, util) {
     try {
-      module.listener.call(this, line, words, respond);
+      module.listener.call(this, line, words, respond, util);
     } catch (err) {
       app.commandevents.emit('error', err, module, line);
     }
@@ -804,7 +804,9 @@ app.events.emit('module.newbare', {
       'nick':  '`nick <new-name>` - set your IRC nickname to a new value',
 
       'raw':   '`raw <raw-irc...>` - send raw IRC protocol',
-      'eval':  '`eval <code...>` - evaluate Javascript code just like that'
+      'eval':  '`eval <code...>` - evaluate Javascript code just like that',
+
+      'ccache': '`ccache <channel>` - clear the channel names cache'
     };
   },
 
@@ -878,6 +880,20 @@ app.events.emit('module.newbare', {
       case 'raw':
         app.events.emit('system.raw', line);
         writeToSocket(words.slice(1).join(' '));
+        break;
+
+      case 'ccache':
+        if (!words[1]) {
+          respond('usage: `help system.ccache`');
+          break;
+        }
+
+        if (!app.state.channels[words[1]]) {
+          respond('no such channel: ' + words[1]);
+          break;
+        }
+        app.state.channels[words[1]].names = [];
+        respond('success!');
         break;
 
       // system.eval <javascript>
