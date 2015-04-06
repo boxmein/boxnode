@@ -500,7 +500,7 @@ app.ircevents.on('JOIN', function(line) {
   channels[channel] = channels[channel] || {};
   channels[channel].names = channels[channel].names || [];
 
-  if (channels[channel].indexOf(line.nick) !== -1) {
+  if (channels[channel].names.indexOf(line.nick) !== -1) {
     console.warn(line.nick, 'is already in this channel!');
   }
 
