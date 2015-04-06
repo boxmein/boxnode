@@ -453,7 +453,8 @@ app.ircevents.on('PRIVMSG', function(line) {
 
 
 
-app.ircevents.on('Welcome', app.events.emit.bind(app.events, 'ready'));
+app.ircevents.on('Welcome',
+  app.events.emit.bind(app.events, 'ready'));
 
 
 // Parse ISUPPORT lines, might be useful!
