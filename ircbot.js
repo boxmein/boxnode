@@ -529,26 +529,6 @@ app.ircevents.on('PART', function(line) {
 });
 
 
-app.ircevents.on('NamReply', function(line) {
-  var channel = line.params[2]
-    , channels = app.state.channels;
-
-  if (!channel || channel == '')
-    return;
-
-  channels[channel] = channels[channel] || [];
-
-  var nicks = line.params[3].split(' ');
-
-  _.each(nicks, function(ea) {
-    if (channels[channel].indexOf(line.nick) !== -1) {
-      console.warn(line.nick, 'is already in this channel!');
-      return;
-    }
-    channels[channel].push(ea);
-  });
-});
-
 
 
 // Ready to join/do everything
