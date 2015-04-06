@@ -42,6 +42,8 @@ exports.getHelp = function() {
   };
 };
 
+
+
 exports.listener = function(line, words, respond) {
   var ev = this.event.split('.');
 
@@ -55,7 +57,11 @@ exports.listener = function(line, words, respond) {
   }
 };
 
+
+
 exports.init = function(config, myconfig, alias) {};
+
+
 
 // https://stackoverflow.com/a/617685/2278637
 manglers.rot13 = function(s) {
@@ -63,6 +69,9 @@ manglers.rot13 = function(s) {
     return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);
   });
 };
+
+
+
 
 // Text::Bastardize
 manglers.k3wlt0k = function(text) {
@@ -96,7 +105,9 @@ manglers.k3wlt0k = function(text) {
              .replace(/3r/g, 'ur')
              .toUpperCase();
   return text;
-};
+}
+
+
 
 // Text::Bastardize
 manglers.reduct = function(text) {
@@ -112,10 +123,14 @@ manglers.reduct = function(text) {
              .replace(/\B(?:a|e|i|o|u)\B/g,'');
 };
 
+
+
 // ... I don't think there is an origin
 manglers.reverse = function(text) {
   return text.split('').reverse().join('');
 };
+
+
 
 // Text::Bastardize
 manglers.n20e = function(text) {
@@ -125,9 +140,13 @@ manglers.n20e = function(text) {
   return start + n + end;
 };
 
+
+
 manglers.gnu = function(text) {
   return 'GNU/' + text;
 };
+
+
 
 manglers.aol = function(text) {
   var addition = _.sample([
@@ -137,9 +156,14 @@ manglers.aol = function(text) {
   return text + addition + addition + addition;
 };
 
+
+
 manglers.uppercase = function(text) {
   return text.toUpperCase();
 };
+
+
+
 
 manglers.titlecase = function(text) {
   return text.split(' ').map(function(ea) {
@@ -147,13 +171,21 @@ manglers.titlecase = function(text) {
   });
 };
 
+
+
+
 manglers.lowercase = function(text) {
   return text.toLowerCase();
 };
 
+
+
+
 manglers.compress = function(text) {
   return text.split(' ').join('');
 };
+
+
 
 manglers.leetspeak = function(text) {
   return text.toUpperCase()
@@ -166,6 +198,9 @@ manglers.leetspeak = function(text) {
              .replace(/G/g, '6')
              .replace(/B/g, '8');
 };
+
+
+
 
 manglers.sort = function(text) {
   return _.sortBy(text, function(ea) { return ea.charCodeAt(0); }).join('');
