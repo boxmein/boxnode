@@ -61,6 +61,9 @@ exports.listener = function(line, words, respond) {
         punish(line, undefined, respond);
       } else {
         respond('The gun clicks.');
+        cfg.chances.russian += cfg.chances.russian;
+        if (cfg.chances.russian >= 1)
+          cfg.chances.russian = DEFAULT_CHANCES.russian;
       }
       break;
 
