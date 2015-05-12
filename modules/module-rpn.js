@@ -563,9 +563,323 @@ var rpn = {
       stack.push(Math.pow(a, b));
     }
   },
+
+  '!': {
+    help: '(int a, int addr -- ) stores a value at an address in the storage.',
+    fn: function() {
+      if (stack.length < 2)
+        return stack.push('UnderflowError');
+
+      var addr = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(addr))
+        return stack.push('isNaN(addr)');
+
+      storage[addr] = a;
+    }
+  },
+
+  '#': {
+    help: '(int a -- +1 or -1) returns the sign of the number',
+    fn: function() {
+      if (stack.length < 1)
+        return stack.push('UnderflowError');
+
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      stack.push(Math.abs(a) / a);
+    }
+  },
+
+  'star-slash': {
+    help: '(int a, int b, int c -- a * b / c) multiply and divide at the same time',
+    fn: function() {
+      if (stack.length < 3)
+        return stack.push('UnderflowError');
+
+      var c = parseInt(stack.pop(), 10);
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      if (isNaN(c))
+        return stack.push('isNaN(c)');
+
+      if (c === 0)
+        return stack.push('ZeroDivisionError');
+
+      stack.push(a * b / c);
+    }
+  },
+
+  'star-slash-mod': {
+    help: '(int a, int b, int c -- (a * b / c), (a * b mod c)) multiply, divide and mod at the same time',
+    fn: function() {
+      if (stack.length < 3)
+        return stack.push('UnderflowError');
+
+      var c = parseInt(stack.pop(), 10);
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      if (isNaN(c))
+        return stack.push('isNaN(c)');
+
+      if (c === 0)
+        return stack.push('ZeroDivisionError');
+
+      stack.push(a * b / c);
+      stack.push((a * b) % c);
+    }
+  },
+
+  'plus-store': {
+    help: '(int a, int addr -- ) add a value to an address',
+    fn: function() {
+      if (stack.length < 2)
+        return stack.push('UnderflowError');
+
+      var addr = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(addr))
+        return stack.push('isNaN(addr)');
+
+      if (storage[addr] !== undefined) {
+        storage[addr] += a;
+      }
+    }
+  },
+
+  'gtz': {
+    help: '(int a -- a > 0 ? 1 : 0) return 1 if a is greater than zero',
+    code: '0 >'
+  },
+
+  'ltz': {
+    help: '(int a -- a < 0 ? 1 : 0) return 1 if a is less than zero',
+    code: 'gz not'
+  },
+
+  'etz': {
+    help: '(int a -- a == 0 ? 1 : 0) return 1 if a equals 0',
+    code: 'not'
+  },
+
+  'abs': {
+    help: '(int a -- abs(a)) return the absolute value of a',
+    code: 'dup sgn *'
+  },
+
+  '?': {
+    help: '(int addr -- a) return the value stored in storage at the address, or 0',
+    fn: function() {
+      if (stack.length < 1)
+        return stack.push('UnderflowError');
+
+      var addr = parseInt(stack.pop(), 10);
+
+      if (isNaN(addr))
+        return stack.push('isNaN(addr)');
+
+      if (storage[addr] !== undefined)
+        stack.push(storage[addr]);
+    }
+  },
+
+  'depth': {
+    help: '(-- int a) returns how many values are on the stack',
+    fn: function() {
+      stack.push(stack.length);
+    }
+  },
+
+  'drop': {
+    help: '(a --) drop a value from the stack',
+    fn: function() {
+      if (stack.length > 0)
+        stack.pop();
+    }
+  },
+
+  'bnot': {
+    help: '(int a -- ~a) invert all bits in a',
+    fn: function() {
+      if (stack.length < 1)
+        return stack.push('UnderflowError');
+
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+      stack.push(~a);
+    }
+  },
+
+  'max': {
+    help: '(int a, int b -- a > b ? a : b) return the maximum of a and b',
+    fn: function() {
+      if (stack.length < 2)
+        return stack.push('UnderflowError');
+
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      stack.push(a > b ? a : b);
+    }
+  },
+  'min': {
+    help: '(int a, int b -- a < b ? a : b) return the minimum of a and b',
+    fn: function() {
+      if (stack.length < 1)
+        return stack.push('UnderflowError');
+
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      stack.push(a < b ? a : b);
+    }
+  },
+
+  'mod': {
+    help: '(int a, int b -- a % b) return the modulus (remainder) of a and b',
+    fn: function() {
+      if (stack.length < 2)
+        return stack.push('UnderflowError');
+
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      stack.push(a % b);
+    }
+  },
+
+  'over': {
+    help: '(a, b -- a, b, a) put a copy the bottom on top of the top',
+    fn: function() {
+      if (stack.length < 2)
+        return stack.push('UnderflowError');
+
+      if (stack.length + 3 > stack_max)
+        return stack.push('OverflowError');
+
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      stack.push(a);
+      stack.push(b);
+      stack.push(a);
+    }
+  },
+
+  'rot': {
+    help: '(a, b, c -- b, c, a) rotate the top 3 entries',
+    fn: function() {
+      if (stack.length < 3)
+        return stack.push('UnderflowError');
+
+      var c = parseInt(stack.pop(), 10);
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      if (isNaN(c))
+        return stack.push('isNaN(c)');
+
+      stack.push(b);
+      stack.push(c);
+      stack.push(a);
+    }
+  },
+
+  'intersperse': {
+    help: '(string a, char b -- string) place the char inbetween every character in the string',
+    fn: function() {
+      if (stack.length < 2)
+        return stack.push('UnderflowError');
+
+      var endstr = '';
+      var chr = stack.pop();
+      var str = stack.pop();
+
+      if (typeof str == 'string' && typeof chr == 'string') {
+        endstr += chr;
+        for (var i = 0; i < Math.min(str.length, 50); i++) {
+          endstr += str[i];
+          endstr += chr;
+        }
+      } else {
+        endstr = 'TypeError';
+      }
+
+      stack.push(endstr);
+    }
+  },
+
+  'cat': {
+    help: '(string a, string b -- string) concatenate two strings together',
+    fn: function() {
+      if (stack.length < 2)
+        return stack.push('UnderflowError');
+
       var b = stack.pop();
       var a = stack.pop();
 
+      if (typeof a == 'string' && typeof b == 'string') {
+        stack.push(a + b);
+      } else {
+        stack.push('TypeError');
+      }
     }
   }
 };
