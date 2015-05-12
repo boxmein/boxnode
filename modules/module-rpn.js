@@ -269,7 +269,7 @@ function evaluate(tok, recursionLevel) {
 
 var rpn = {
   '+': {
-    help: 'pops two arguments, adds them and pushes the result',
+    help: '(int a, int b -- a + b) adds a and b',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -290,7 +290,7 @@ var rpn = {
   },
 
   '-': {
-    help: 'pops two arguments, subtracts the top from the bottom and pushes the result',
+    help: '(int a, int b -- a - b) subtracts b from a',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -311,7 +311,7 @@ var rpn = {
   },
 
   '>': {
-    help: 'pops two arguments, checks if bottom > top, pushes 1 if true and 0 if false',
+    help: '(int a, int b -- a > b ? 1 : 0) returns 1 if a > b',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -332,7 +332,7 @@ var rpn = {
   },
 
   '*': {
-    help: 'pops two arguments, returns bottom multiplied by top',
+    help: '(int a, int b -- a * b) returns a multiplied by b',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -353,7 +353,7 @@ var rpn = {
   },
 
   'not': {
-    help: 'pops 1 argument, returns 1 if the argument is equal to 0',
+    help: '(a -- a == 0 ? 1 : 0) returns 1 if a == 0',
     fn: function() {
       if (stack.length < 1)
         return stack.push('UnderflowError');
@@ -370,7 +370,7 @@ var rpn = {
   },
 
   'dup': {
-    help: 'duplicates the argument at the top of the stack',
+    help: '(a -- a a) duplicates the argument at the top of the stack',
     fn: function() {
       if (stack.length < 1)
         return stack.push('UnderflowError');
@@ -388,7 +388,7 @@ var rpn = {
   },
 
   'swap': {
-    help: 'swaps the two top arguments',
+    help: '(a b -- b a) swaps the two top elements',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -404,12 +404,12 @@ var rpn = {
   },
 
   '<': {
-    help: 'pops 2 elements off the stack, pushes 1 if bottom < top, else 0',
+    help: '(int a, int b -- a < b ? 1 : 0) returns 1 if a < b',
     code: 'swap >'
   },
 
   'or': {
-    help: 'pops 2 elements off the stack, does short-circuited OR like bottom || top',
+    help: '(a b -- a || b) returns b if a otherwise a',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -424,7 +424,7 @@ var rpn = {
   },
 
   'and': {
-    help: 'pops 2 elements off the stack, does short-circuited OR like bottom && top',
+    help: '(a b -- a && b) returns a if a otherwise b',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -439,7 +439,7 @@ var rpn = {
   },
 
   'bor': {
-    help: 'pops two elements off the stack, returns their binary OR',
+    help: '(a b -- a | b) returns their binary OR',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -452,7 +452,7 @@ var rpn = {
   },
 
   'band': {
-    help: 'pops two elements off the stack, returns their binary AND',
+    help: '(int a, int b -- a & b) returns their binary AND',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -465,7 +465,7 @@ var rpn = {
   },
 
   'bxor': {
-    help: 'pops two elements off the stack, returns their binary XOR',
+    help: '(int a, int b -- a ^ b) returns their binary XOR',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -478,7 +478,7 @@ var rpn = {
   },
 
   'shl': {
-    help: 'pops two elements off the stack, shifts the bottom left by the top (1 << 2 == 1 2 shl)',
+    help: '(int a, int b -- a << b) shift a left by b',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -491,7 +491,7 @@ var rpn = {
   },
 
   'shr': {
-    help: 'pops two elements off the stack, shifts the bottom right by the top (1 >> 2 == 1 2 shr)',
+    help: '(int a, int b -- a >> b) shift a right by b',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -504,7 +504,7 @@ var rpn = {
   },
 
   'eq': {
-    help: 'pops two elements off the stack, pushes 1 if equal, 0 if not',
+    help: '(a, b -- a == b ? 1 : 0) returns 1 if the elements are equal',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
@@ -517,12 +517,12 @@ var rpn = {
   },
 
   'neq': {
-    help: 'pops two elements off the stack, pushes 1 if not equal, 0 if equal',
+    help: '(int a, int b -- a != b ? 1 : 0) returns 1 if the elements are inequal',
     code: 'eq not'
   },
 
   'pow': {
-    help: 'pops two elements off the stack, pushes the power of bottom to top, eg (3 ^ 2) == (3 2 ^)',
+    help: '(int a, int b -- a ** b) returns a to the power of b',
     fn: function() {
       if (stack.length < 2)
         return stack.push('UnderflowError');
