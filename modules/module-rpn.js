@@ -141,14 +141,14 @@ function lexRPN(words) {
     }
 
     // Try and find commands in here, otherwise treat as nothing
-    else if (/[A-Za-z]/.test(words[i])) {
+    else if (/[A-Za-z\-]/.test(words[i])) {
       // console.log('letter found, might be a word command');
       valstr = '';
       maxlength = 10;
       valstr += words[i];
 
       while (maxlength --> 0 && i+1 < words.length &&
-             /[A-Za-z]/.test(words[i+1]) ) {
+             /[A-Za-z\-]/.test(words[i+1]) ) {
         i += 1;
         // console.log('more letters!', words[i]);
         valstr += words[i];
