@@ -2,6 +2,7 @@ exports.type = 'command';
 var _ = require('underscore');
 
 var stack = [];
+var storage = {};
 var stack_max = 100;
 
 var owner, myconfig;
@@ -414,8 +415,8 @@ var rpn = {
       if (stack.length < 2)
         return stack.push('UnderflowError');
 
-      var a = stack.pop();
       var b = stack.pop();
+      var a = stack.pop();
 
       stack.push(a || b);
     },
@@ -429,8 +430,8 @@ var rpn = {
       if (stack.length < 2)
         return stack.push('UnderflowError');
 
-      var a = stack.pop();
       var b = stack.pop();
+      var a = stack.pop();
 
       stack.push(a && b);
     },
