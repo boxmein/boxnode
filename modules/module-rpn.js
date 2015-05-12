@@ -457,8 +457,14 @@ var rpn = {
       if (stack.length < 2)
         return stack.push('UnderflowError');
 
-      var a = stack.pop();
-      var b = stack.pop();
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
 
       stack.push(a & b);
     }
@@ -470,8 +476,14 @@ var rpn = {
       if (stack.length < 2)
         return stack.push('UnderflowError');
 
-      var a = stack.pop();
-      var b = stack.pop();
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
+
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
 
       stack.push(a ^ b);
     }
@@ -483,10 +495,16 @@ var rpn = {
       if (stack.length < 2)
         return stack.push('UnderflowError');
 
-      var a = stack.pop();
-      var b = stack.pop();
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
 
-      stack.push(b << a);
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      stack.push(a << b);
     }
   },
 
@@ -496,10 +514,16 @@ var rpn = {
       if (stack.length < 2)
         return stack.push('UnderflowError');
 
-      var a = stack.pop();
-      var b = stack.pop();
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
 
-      stack.push(b >> a);
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      stack.push(a >> b);
     }
   },
 
@@ -527,10 +551,21 @@ var rpn = {
       if (stack.length < 2)
         return stack.push('UnderflowError');
 
-      var a = stack.pop();
-      var b = stack.pop();
+      var b = parseInt(stack.pop(), 10);
+      var a = parseInt(stack.pop(), 10);
 
-      stack.push(Math.pow(b, a));
+      if (isNaN(a))
+        return stack.push('isNaN(a)');
+
+      if (isNaN(b))
+        return stack.push('isNaN(b)');
+
+      stack.push(Math.pow(a, b));
+    }
+  },
+      var b = stack.pop();
+      var a = stack.pop();
+
     }
   }
 };
