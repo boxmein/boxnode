@@ -260,6 +260,11 @@ function evaluate(tok, recursionLevel) {
       }
     }
   }
+
+  else {
+    if (stack.length + 1 < stack_max)
+      stack.push(tok);
+  }
 }
 
 var rpn = {
