@@ -140,6 +140,26 @@ function lexRPN(words) {
 
     }
 
+    // found a quote mark, begin string
+    else if (words[i] == '"') {
+      // asd"f asdf asdf aa"asdf
+      valstr = '';
+      maxlength = 50;
+
+      while (maxlength --> 0 && i+1 < words.length &&
+             words[i+1] !== '"') {
+        i += 1;
+        valstr += words[i];
+      }
+
+      console.log('found string:', valstr);
+
+      lexed.push(valstr.toString());
+
+      // ignore the last quote mark too
+      i++;
+    }
+
     // Try and find commands in here, otherwise treat as nothing
     else if (/[A-Za-z\-]/.test(words[i])) {
       // console.log('letter found, might be a word command');
