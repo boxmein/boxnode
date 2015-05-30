@@ -1,6 +1,8 @@
 
 var _ = require('underscore');
 var config = null;
+var toplog = require('../toplog');
+var logger = new toplog({ concern: 'module-numbers' });
 
 exports.type = 'command';
 
@@ -64,6 +66,7 @@ exports.listener = function(line, words, respond, util) {
       author: line.nick,
       secretNumber: rand4()
     };
+    logger.verbose('new game created by ' + line.nick + ': ' + gameid);
     respond('you created a new game! the game ID is ' + gameid);
   }
 

@@ -7,6 +7,8 @@
 
 var _ = require('underscore');
 var crypto = require('crypto');
+var toplog = require('../toplog');
+var logger = new toplog({ concern: 'mangler' });
 
 exports.type = 'command';
 
@@ -54,10 +56,11 @@ exports.listener = function(line, words, respond) {
   }
 
   if (manglers.hasOwnProperty(ev[1])) {
-    console.log(ev[1]);
     respond(
       manglers[ev[1]](words.slice(1).join(' '), words)
     );
+  } else {
+    logger.verbose('no such mangler: ' + ev[1]);
   }
 };
 
