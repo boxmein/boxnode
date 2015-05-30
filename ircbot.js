@@ -6,12 +6,25 @@ var net     = require('net')
   , YAML    = require('yamljs')
   , Emitter = require('eventemitter2').EventEmitter2;
 
+var toplog = require('./toplog');
+
+var logger = new toplog({concern: 'ircbot', loglevel: 'VERBOSE'});
+
+logger.verbose('starting at ' + Date.now());
+logger.verbose('Loading configuration...');
 
 // Set up reasonable defaults for what we can default to
 var config = _.defaults(YAML.load('configs.yml'),
                         YAML.load('configs.default.yml'));
 
+logger.info(config.motd);
+
 var DEBUG = config.debug || process.env['DEBUG'] || true;
+logger.verbose('Debugging: ' + DEBUG);
+
+if (DEBUG) {
+  logger.properties.loglevel = 'INFO';
+}
 
 // stolen from https://github.com/SBSTP/irc/blob/master/constants.go
 var C = require('./constants.json');
@@ -63,15 +76,16 @@ var app = {
 // Mega-error-handlers.
 //
 
+logger.verbose('Setting up error handlers...');
 
 app.events.on('error', function() {
-  console.log('\x1b[31;1merror in app.events: ' + arguments + '\x1b[0m');
+  logger.error('\x1b[31;1merror in app.events: ' + arguments + '\x1b[0m');
 });
 
 
 // Unload a module if it throws up
 app.commandevents.on('error', function(err, module, line) {
-  console.log('\x1b[31;1merror in a module:', module.name, err, '\x1b[0m');
+  logger.error('\x1b[31;1merror in a module:', module.name, err, '\x1b[0m');
   app.events.emit('module.unload', module.name);
 
   if (config.announce_module_crash) {
@@ -82,7 +96,7 @@ app.commandevents.on('error', function(err, module, line) {
 
 // IRC event error? :O
 app.ircevents.on('error', function() {
-  console.log('\x1b[31;1merror in app.ircevents: ' + arguments + '\x1b[0m');
+  logger.error('\x1b[31;1merror in app.ircevents: ' + arguments + '\x1b[0m');
 });
 
 
@@ -195,7 +209,7 @@ function matchesHostname(a, b) {
 
 /** Writes a line of data to the socket. */
 function writeToSocket(data) {
-  if (DEBUG) console.log(data);
+  logger.verbose(data);
   sock.write(data + '\r\n');
 }
 
@@ -358,7 +372,7 @@ app.util.isVoiceIn = isVoiceIn;
 // Connection handshake
 app.events.on('sock.connect', function() {
 
-  console.log('connecting to the server');
+  logger.info('connecting to the server');
 
   if (config.server_password)
     writeToSocket('PASS ' + config.server_password);
@@ -403,6 +417,7 @@ app.events.on('sock.data', function(chunk) {
 
 // IRC: Receive PING
 app.ircevents.on('PING', function(line) {
+  logger.verbose('PING received, returning PONG');
   writeToSocket('PONG ' + paramsToString(line.params));
 });
 
@@ -468,8 +483,7 @@ app.ircevents.on('ISupport', function(line) {
     // find out the op/voice chars
     if(es[0] == 'PREFIX') {
 
-      if (DEBUG)
-        console.log('Found PREFIX line - setting OP_CHAR and VOICE_CHAR');
+      logger.verbose('Found PREFIX line - setting OP_CHAR and VOICE_CHAR');
       // "(ov)@+"
       // index the o and v chars, and add them to app.state.OP_CHAR/VOICE_CHAR
       var rparen = es[1].indexOf(')');
@@ -479,8 +493,7 @@ app.ircevents.on('ISupport', function(line) {
       app.state.OP_CHAR = es[1][rparen + op];
       app.state.VOICE_CHAR = es[1][rparen + voice];
 
-      if (DEBUG)
-        console.log(app.state.OP_CHAR, app.state.VOICE_CHAR);
+      logger.verbose(app.state.OP_CHAR, app.state.VOICE_CHAR);
     }
   });
 });
@@ -502,7 +515,7 @@ app.ircevents.on('JOIN', function(line) {
   channels[channel].names = channels[channel].names || [];
 
   if (channels[channel].names.indexOf(line.nick) !== -1) {
-    console.warn(line.nick, 'is already in this channel!');
+    logger.warning(line.nick, 'is already in this channel!');
   }
 
   channels[channel].names.push(line.nick);
@@ -525,7 +538,7 @@ app.ircevents.on('PART', function(line) {
     return;
   } else {
     // lol wtf
-    console.warn('wtf??? someone left a channel they weren\'t in');
+    logger.warning('wtf??? someone left a channel they weren\'t in');
   }
 });
 
@@ -545,10 +558,13 @@ app.events.on('ready', function(line) {
 
 // Nickserv authentication
 if (config.auth && config.auth.type == 'NickServ') {
+  logger.verbose('NickServ auth setup, setting a notice listener...');
+
   app.ircevents.on('Notice', function(line) {
     // Actual NickServ
     if (line.nick == 'NickServ' && line.hostname == 'services.' &&
         line.params[1].indexOf('identify') !== -1) {
+      logger.info('Identifying to NickServ as ' + config.auth.name);
       writeToSocket('PRIVMSG NickServ :identify ' + config.auth.name + ' ' + config.auth.password);
     }
   });
@@ -575,13 +591,13 @@ function cushionListener(module) {
 
 // New module added (only when you add via require())
 app.events.on('module.new', function(name) {
-  console.log('new module: ' + name);
+  logger.info('new module: ' + name);
 
   try {
     var module = require('./modules/module-' + name + '.js');
   }
   catch (err) {
-    console.error('Failed to load module `'+name+'`: ', err.message);
+    logger.error('Failed to load module `'+name+'`: ', err.message);
     app.events.emit('module.loadfail', name, err);
     return;
   }
@@ -600,7 +616,7 @@ app.events.on('module.new', function(name) {
   };
 
   module.reload = function() {
-    console.log('\x1b[31;1mreloading module ' + name + '\x1b[0m');
+    logger.info('\x1b[31;1mreloading module ' + name + '\x1b[0m');
 
     // if there's an unload method then unload the module first
     if (module.unload)
@@ -659,7 +675,7 @@ app.events.on('module.newbare', function(module) {
 
   // This module wants to hook onto events or emit them
   else if (module.type == 'event') {
-    console.log(module);
+    logger.verbose('new event-type module: ' + module);
 
     // also silently fail
     if (!module.init) {
@@ -675,6 +691,7 @@ app.events.on('module.newbare', function(module) {
 
 
 app.events.on('module.reload', function(name) {
+  logger.verbose('in module.reload listener: ' + name);
   if (!app.modules.hasOwnProperty(name))
     return;
   if (app.modules[name].reload)
@@ -683,6 +700,7 @@ app.events.on('module.reload', function(name) {
 
 
 app.events.on('module.unload', function(name) {
+  logger.verbose('in module.unload listener: ' + name);
   if (!app.modules.hasOwnProperty(name))
     return;
   if (app.modules[name].unload)
@@ -695,13 +713,14 @@ app.events.on('module.unload', function(name) {
 app.events.on('quit.*', function(reason) {
   var evt = this.event.slice(5);
   if (evt == 'sigint') {
-    console.log('SIGINT: exiting gracefully');
+    logger.fatal('SIGINT: exiting gracefully');
     reason = 'SIGINT';
   }
   if (evt == 'graceful' ||
       evt == 'sigint') {
     sock.end('QUIT :' +reason+'\r\n');
     sock.once('end', function() {
+      logger.fatal('graceful exit completed!');
       process.exit(0);
     });
   } else {
@@ -742,7 +761,7 @@ app.commandevents.on('help', function(line, words, respond) {
 
     if (terms.length > 1) {
       if (help.hasOwnProperty(terms[1])) {
-        console.log('terms[1] exists on help:',help,terms[1]);
+        logger.verbose('terms[1] exists on help:',help,terms[1]);
         return respond(help[terms[1]]);
       }
     } else {
@@ -824,6 +843,9 @@ app.events.emit('module.newbare', {
   },
 
   listener: function(line, words, respond) {
+
+    logger.verbose('handling system-level commands...');
+
     var permission = false;
 
     var authorizeds = _.flatten([
@@ -840,6 +862,8 @@ app.events.emit('module.newbare', {
       app.events.emit('system.unauthorized', line.nick, words[0]);
       return;
     }
+
+    logger.verbose('system-level permission obtained, running');
 
     // the asterisk
     var call = this.event.slice(7);
@@ -903,6 +927,7 @@ app.events.emit('module.newbare', {
         try {
           respond(eval('(function(){return '+ws+'})()'));
         } catch (err) {
+          logger.warning(err.stack);
           respond(err.message);
         }
         break;
@@ -1096,18 +1121,22 @@ if (config.announce_character) {
 
 // Fire new module events for every module
 config.modules_enabled.forEach(function(ea) {
+  logger.verbose('firing module.new for ' + ea);
   app.events.emit('module.new', ea);
 });
 
 
 process.on('uncaughtException', function(err) {
-  console.error(err);
+  logger.fatal(err);
   app.events.emit('quit.crash');
 });
 
 process.on('SIGINT', function() {
+  logger.verbose('sigint - quitting..');
   app.events.emit('quit.sigint');
 });
+
+logger.verbose('initializing IRC socket...');
 
 // Create a socket and connect to the IRC server
 var sock = new net.Socket();
@@ -1120,7 +1149,11 @@ sock.connect({
   port: config.port
 }, app.events.emit.bind(app.events, 'sock.connect'));
 
+
+logger.verbose('attaching event handlers');
 sock.on('error', app.events.emit.bind(app.events, 'sock.error'));
 sock.on('data', app.events.emit.bind(app.events, 'sock.data'));
 sock.on('end', app.events.emit.bind(app.events, 'sock.end'));
+
+logger.verbose('done initializing!');
 
