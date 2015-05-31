@@ -22,7 +22,7 @@ logger.info(config.motd);
 var DEBUG = config.debug || process.env['DEBUG'] || true;
 logger.verbose('Debugging: ' + DEBUG);
 
-if (DEBUG) {
+if (!DEBUG) {
   logger.properties.loglevel = 'INFO';
 }
 
