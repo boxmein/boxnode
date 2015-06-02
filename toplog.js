@@ -25,7 +25,7 @@ var DEFAULTS = {
     'INFO': '36;1',
     'WARNING': '33;1',
     'ERROR': '31;1',
-    'FATAL': '31;0' }
+    'FATAL': '31;1' }
 };
 
 function clone(obj) {
