@@ -598,7 +598,7 @@ app.events.on('module.new', function(name) {
     var module = require('./modules/module-' + name + '.js');
   }
   catch (err) {
-    logger.error('Failed to load module `'+name+'`: ', err.message);
+    logger.error('Failed to load module `'+name+'`: ' + err.message);
     app.events.emit('module.loadfail', name, err);
     return;
   }
