@@ -110,6 +110,9 @@ module.exports = function(props) {
     endobj[prop.loglevels[i].toLowerCase()] = log.bind(that, prop.loglevels[i]);
   }
 
+  // usable as a swap for conso
+  endobj.log = log.bind(that, prop.loglevels[0]);
+
   endobj.properties = prop;
 
   return endobj;
