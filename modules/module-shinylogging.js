@@ -6,6 +6,9 @@ exports.type = 'event';
 var util = require('util');
 var toplog = require('../toplog');
 
+var logger = new toplog({concern: 'irc'});
+logger.properties.colors.INFO = '37;1';
+
 exports.init = function(config, app, irc, command) {
 
   /*
@@ -19,20 +22,20 @@ exports.init = function(config, app, irc, command) {
 
     if (evt == 'module.unload' ||
         evt == 'module.reload') {
-        console.log(evt + ' ' + arguments[1]);
+        logger.log(evt + ' ' + arguments[1]);
     }
 
     else if (/^quit\..*/.test(evt)) {
-      console.log('QUITTING ' + evt);
+      logger.log('QUITTING ' + evt);
     }
 
     else if (evt == 'ready') {
-      console.log('ready to join channels!');
+      logger.log('ready to join channels!');
     }
 
     else {
       if (config.loglevel >= 3)
-        console.log(arguments);
+        logger.log(arguments);
     }
   });
 
@@ -46,7 +49,7 @@ exports.init = function(config, app, irc, command) {
   */
   command.onAny(function(ircline) {
     var evt = this.event;
-    console.log('\x1b[37;0m' + ircline.prefix + ' is using ' + evt + '('+ircline.params[1]+')');
+    logger.log('\x1b[37;0m' + ircline.prefix + ' is using ' + evt + '('+ircline.params[1]+')');
   });
 
   /*
@@ -64,35 +67,35 @@ exports.init = function(config, app, irc, command) {
       var text = ircline.params[1];
       if (/\x01ACTION.*\x01/.test(text)) {
         var meText = text.replace('\x01ACTION','').replace('\x01','');
-        console.log(util.format('\x1b[36;1m(%s) * %s %s\x1b[0m',
+        logger.log(util.format('\x1b[36;1m(%s) * %s %s\x1b[0m',
                     ircline.params[0], ircline.channel, meText));
       }
       else {
-        console.log(util.format('\x1b[37;1m(%s) <%s> %s\x1b[0m',
+        logger.log(util.format('\x1b[37;1m(%s) <%s> %s\x1b[0m',
                     ircline.params[0], ircline.nick, text));
       }
     }
 
     else if (evt == 'JOIN') {
-      console.log(util.format('\x1b[36;1m%s (%s) joined %s (%s)\x1b[0m',
+      logger.log(util.format('\x1b[36;1m%s (%s) joined %s (%s)\x1b[0m',
                   ircline.nick, ircline.prefix, ircline.params[0],
                   ircline.params[1]));
     }
     else if (evt == 'PART') {
-      console.log(util.format('\x1b[36;1m%s (%s) left %s (%s)\x1b[0m',
+      logger.log(util.format('\x1b[36;1m%s (%s) left %s (%s)\x1b[0m',
                   ircline.nick, ircline.prefix, ircline.params[0],
                   ircline.params[1]));
     }
     else if (evt == 'QUIT') {
-      console.log(util.format('\x1b[36;1m%s (%s) quit (%s)\x1b[0m',
+      logger.log(util.format('\x1b[36;1m%s (%s) quit (%s)\x1b[0m',
                   ircline.nick, ircline.prefix, ircline.params[0]));
     }
     else if (evt == 'PING') {
-      console.log('\x1b[37;1mpong!\x1b[0m');
+      logger.log('\x1b[37;1mpong!\x1b[0m');
     }
     else {
       if (config.loglevel >= 3) {
-        console.log('\x1b[33;1mapp.ircevents emitted: ' + this.event,
+        logger.log('\x1b[33;1mapp.ircevents emitted: ' + this.event,
           arguments, '\x1b[0m');
       }
     }
