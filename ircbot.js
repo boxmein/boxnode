@@ -684,7 +684,7 @@ app.events.on('module.newbare', function(module) {
       return;
     }
 
-    module.init(config, app.events, app.ircevents, app.commandevents);
+    module.init(config, app.events, app.ircevents, app.commandevents, app.util, config.modules[module.name]);
   }
 
   app.modules[module.name] = module;
