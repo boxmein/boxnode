@@ -80,10 +80,23 @@ module.exports = function(props) {
     endstr = endstr.replace('%loglevel1', loglevel[0]);
     endstr = endstr.replace('%loglevel', loglevel);
 
+    // Concat other arguments
+
+    var msg = '';
+    for (var i = 1; i < arguments.length; i++) {
+      if (!arguments.hasOwnProperty(i))
+        break;
+      var s = arguments[i];
+
+      if (typeof s == 'string') {
+        msg += ' ' + s;
+      } else {
+        msg += ' ' + util.inspect(s);
+      }
+    }
 
     // And the actual message >_>
-    endstr = endstr.replace('%message', (typeof text == 'string') ? text :
-                util.inspect(text));
+    endstr = endstr.replace('%message', msg);
 
     if (prop.loglevels.indexOf(loglevel) >= logIndex) {
       console.log(endstr);
