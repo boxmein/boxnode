@@ -314,6 +314,7 @@ respond.RAW = function(data) {
   writeToSocket(data.replace(/[\r\n]/g, ''));
 };
 
+app.util.respond = respond;
 
 // Alias system
 
