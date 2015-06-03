@@ -20,8 +20,10 @@ announce_character: true
 announce_message: "i can be controlled with the following prefix: %char"
 
 modules_enabled:
-  - logging
+  - shinylogging
   - test
+  - hug
+  - hello
 
 channels:
   - name: "##boxmein"
@@ -30,3 +32,45 @@ modules:
   test:
     message: "hello! the command you entered is %cmd"
 
+  system:
+    authorized:
+      - "*!*@unaffiliated/boxmein"
+
+  roulette:
+    punishment:
+      # kick / kickban / ban
+      type: kickban
+      # seconds
+      ban_duration: 30
+
+    chances:
+      # 1/6 chance of backfiring
+      russian: 0.166666
+      # 1/20 chance of kicking someone
+      chancekick: 0.05
+      # 1/4 chance of backfire
+      chancekick_backfire: 0.25
+
+  operator:
+    loud: true
+    ops_allowed: true
+    voices_allowed: true
+    not_an_op: "I'm not an operator!"
+    not_allowed: "Not allowed :D"
+    authorized:
+      - "*!*@unaffiliated/boxmein"
+
+  rpn:
+    stack_max: 100
+    authorized:
+      - "*!*@unaffiliated/boxmein"
+
+  bug:
+    ignored:
+      - "secondbox!*@*"
+
+  yt:
+    api_key: ""
+
+  version:
+    str: "boxnode v3 <todo edit version string>"

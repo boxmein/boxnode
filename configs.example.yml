@@ -65,9 +65,72 @@ channels:
 # Every module gets their own object here - omit if you don't want to
 # configure a module. Modules should define reasonable defaults.
 modules:
+
+  # Test module: outputs this string with %cmd replaced by the exact command
+  # eg if \test.asdf is called, %cmd is replaced by "test.asdf"
   test:
     message: "hello! the command you entered is %cmd"
+
+  # System module: stuff like quit / eval / join / nick / mode
   system:
+    # Authorized to use the system module.
     authorized:
       - "*!*@unaffiliated/boxmein"
       - "*!*@unaffiliated/ristovski"
+
+  # Roulette module: a game of russian roulette (and other deadlies)
+  roulette:
+    # Punishment types
+    punishment:
+      # kick / kickban / ban
+      type: kickban
+      # seconds
+      ban_duration: 30
+
+    # Chances that something happens
+    chances:
+      # 1/6 chance of backfiring
+      russian: 0.166666
+      # 1/20 chance of kicking someone
+      chancekick: 0.05
+      # 1/4 chance of backfire
+      chancekick_backfire: 0.25
+
+  # Operator module: who are allowed to use op commands
+  operator:
+    # Always respond even to invalid calls
+    loud: true
+    # Chanops can use operator commands
+    ops_allowed: true
+    # Channel voices can use operator commands
+    voices_allowed: true
+    # The bot is not an operator
+    not_an_op: "I'm not an operator!"
+    # Someone is not allowed to perform this
+    not_allowed: "Not allowed :D"
+    # Always authorized to perform op commands
+    authorized:
+      - "*!*@unaffiliated/boxmein"
+
+  # RPN calculator module
+  rpn:
+    # Nesting limit for user-defined commands
+    stack_max: 100
+    authorized:
+      # Authorized to create user-defined commands
+      - "*!*@unaffiliated/boxmein"
+
+  # Bug logger
+  bug:
+    # People who don't get to use bug logger commands
+    ignored:
+      - "secondbox!*@*"
+
+  # YouTube title outputter
+  yt:
+    # YouTube Data API v3 key
+    api_key: ""
+
+  # Outputs the version
+  version:
+    str: "boxnode v3 <todo edit version string>"
