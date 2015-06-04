@@ -1,11 +1,19 @@
 {
-	"folders":
-	[
-		{
-			"follow_symlinks": true,
-			"path": "C:\\Users\\Johannes\\Documents\\Projects\\Development\\node-irc-bot-3"
-		}
-	],
+  "folders":
+  [
+    {
+      "follow_symlinks": true,
+      "path": ".",
+      "name": "Core",
+      "folder_exclude_patterns": ["modules"]
+    },
+
+    {
+      "path": "modules",
+      "name": "Modules"
+    }
+
+  ],
 
   "settings": {
     "tab_size": 2,
