@@ -3,32 +3,13 @@ var net     = require('net')
   , fs      = require('fs')
   , _       = require('underscore')
   , Q       = require('q')
-  , YAML    = require('yamljs')
-  , Emitter = require('eventemitter2').EventEmitter2;
-
-var toplog = require('./toplog');
+  , Emitter = require('eventemitter2').EventEmitter2
+  , toplog  = require('./toplog.js')
+  // stolen from https://github.com/SBSTP/irc/blob/master/constants.go
+  , CONSTS  = require('./constants.json')
+  , _CONSTS = _.invert(CONSTS);
 
 var logger = new toplog({concern: 'ircbot', loglevel: 'VERBOSE'});
-
-logger.verbose('starting at ' + Date.now());
-logger.verbose('Loading configuration...');
-
-// Set up reasonable defaults for what we can default to
-var config = _.defaults(YAML.load('configs.yml'),
-                        YAML.load('configs.default.yml'));
-
-logger.info(config.motd);
-
-var DEBUG = config.debug || process.env['DEBUG'] || true;
-logger.verbose('Debugging: ' + DEBUG);
-
-if (!DEBUG) {
-  logger.properties.loglevel = 'INFO';
-}
-
-// stolen from https://github.com/SBSTP/irc/blob/master/constants.go
-var C = require('./constants.json');
-var _C = _.invert(C);
 
 var app = {
   // generic system-level events
@@ -64,11 +45,14 @@ var app = {
     // getNames
     // isOperatorIn
     // isVoiceIn
+    // addAlias
+    // config.get
   },
 
   // command aliases
-  aliases: {}
+  aliases: {},
 
+  // configManager
 };
 
 
@@ -86,6 +70,8 @@ app.events.on('error', function() {
 // Unload a module if it throws up
 app.commandevents.on('error', function(err, module, line) {
   logger.error('\x1b[31;1merror in a module:', module.name, err, '\x1b[0m');
+  logger.verbose(err.stack);
+
   app.events.emit('module.unload', module.name);
 
   if (config.announce_module_crash) {
@@ -105,8 +91,6 @@ app.ircevents.on('error', function() {
 //
 // Some useful functions
 //
-
-
 
 
 /** Parse a line of IRC into an object.
@@ -161,12 +145,12 @@ function parseIRCLine(ea) {
   ircline.numeric = words.shift();
 
 
-  if (!_C.hasOwnProperty(ircline.numeric)) {
+  if (!_CONSTS.hasOwnProperty(ircline.numeric)) {
     // console.warn(ircline.numeric, 'is not recognized');
     ircline.command = ircline.numeric;
   }
   else
-    ircline.command = _C[ircline.numeric];
+    ircline.command = _CONSTS[ircline.numeric];
 
   ircline.params = [];
 
@@ -1118,7 +1102,18 @@ if (config.announce_character) {
 // Entry point
 //
 
+logger.verbose('starting at ' + Date.now());
+logger.verbose('Loading configuration...');
 
+logger.info(app.config.get('motd'));
+
+var DEBUG = app.config.get('debug', process.env['DEBUG']);
+
+if (!DEBUG) {
+  logger.properties.loglevel = 'INFO';
+} else {
+  logger.verbose('Debugging set to ON, verbose output enabled!');
+}
 
 // Fire new module events for every module
 config.modules_enabled.forEach(function(ea) {
@@ -1128,7 +1123,8 @@ config.modules_enabled.forEach(function(ea) {
 
 
 process.on('uncaughtException', function(err) {
-  logger.fatal(err);
+  logger.fatal('uncaught exception: ' + err.message);
+  logger.verbose(err.stack);
   app.events.emit('quit.crash');
 });
 
