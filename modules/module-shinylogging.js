@@ -9,94 +9,106 @@ var toplog = require('../toplog');
 var logger = new toplog({concern: 'irc'});
 logger.properties.colors.INFO = '37;1';
 
-exports.init = function(config, app, irc, command) {
+// events for which we'll just log all parameters
+var ircEventParamLog = ['ISupport', 'MOTD', 'EndOfMOTD', 'LUserChannels',
+    'LUserClient', 'LUserMe', 'MyInfo', 'Welcome', 'YourHost', 'NamReply',
+    'EndOfNames', 'Created'];
 
-  /*
-    'app.events' event stream:
-    these events are sort of system-level: stuff like major IRC events (quit),
-    new modules (module.new), ...
-    EventEmitter2 lets you listen to wildcard events, eg module.*.
-  */
+exports.init = function(app, irc, command, u) {
+
   app.onAny(function() {
     var evt = this.event;
 
     if (evt == 'module.unload' ||
         evt == 'module.reload') {
-        logger.log(evt + ' ' + arguments[1]);
+        logger.verbose(evt + ' ' + arguments[1]);
     }
 
     else if (/^quit\..*/.test(evt)) {
-      logger.log('QUITTING ' + evt);
+      logger.verbose('(app) QUITTING ' + evt);
     }
 
     else if (evt == 'ready') {
-      logger.log('ready to join channels!');
+      logger.verbose('(app) ready to join channels!');
     }
 
     else {
-      if (config.loglevel >= 3)
-        logger.log(arguments);
+      if (u.config.get('loglevel') >= 3 && evt != 'sock.data')
+        logger.verbose('(app) ' + evt + ' ' + arguments);
     }
   });
 
-
-  /*
-    'app.commandevents' event stream:
-    these events fire when someone uses !command. the events contain the exact
-    same arguments as one would expect for listener functions in the 'command'
-    event type - the respective IRC line, the list of words the user spoke (
-    including the command) and the respond function.
-  */
   command.onAny(function(ircline) {
     var evt = this.event;
-    logger.log('\x1b[37;0m' + ircline.prefix + ' is using ' + evt + '('+ircline.params[1]+')');
+    debugger;
+    logger.verbose('\x1b[37;0m' + ircline.prefix + ' is using ' + evt + '('+ircline.params[1]+')');
   });
 
-  /*
-    'app.ircevents' event stream:
-    these are IRC lines broadcast as a more palatable format as returned by
-    parseIRCLine.
-
-    Say, an event would be Welcome, or PRIVMSG, or other numerics translated
-    into appropriate commands. (See constants.json)
-  */
   irc.onAny(function(ircline) {
     var evt = this.event;
+
+    // Channel / private messages
     if (evt == 'PRIVMSG') {
       // detect /me's
       var text = ircline.params[1];
       if (/\x01ACTION.*\x01/.test(text)) {
         var meText = text.replace('\x01ACTION','').replace('\x01','');
-        logger.log(util.format('\x1b[36;1m(%s) * %s %s\x1b[0m',
-                    ircline.params[0], ircline.channel, meText));
+        logger.verbose(util.format('\x1b[36;1m(%s) * %s %s\x1b[0m',
+                    ircline.params[0], ircline.nick, meText));
       }
       else {
-        logger.log(util.format('\x1b[37;1m(%s) <%s> %s\x1b[0m',
+        logger.verbose(util.format('\x1b[37;1m(%s) <%s> %s\x1b[0m',
                     ircline.params[0], ircline.nick, text));
       }
     }
 
+    // Channel / user notices
+    else if (evt == 'NOTICE') {
+
+      var target = ircline.nick || ircline.prefix;
+
+      var mynick = u.config.get('nick', 'boxnode');
+      if (ircline.params[0] !== mynick) {
+        target += '/' + ircline.params[0];
+      }
+      logger.verbose(util.format('\x1b[36;1m-%s- %s\x1b[0m', target, ircline.params[1]));
+    }
+
+    // Joins / parts / quits
     else if (evt == 'JOIN') {
-      logger.log(util.format('\x1b[36;1m%s (%s) joined %s (%s)\x1b[0m',
-                  ircline.nick, ircline.prefix, ircline.params[0],
-                  ircline.params[1]));
+      logger.verbose(util.format('\x1b[36;1m%s (%s) joined %s\x1b[0m',
+                  ircline.nick, ircline.prefix, ircline.params[0]));
     }
     else if (evt == 'PART') {
-      logger.log(util.format('\x1b[36;1m%s (%s) left %s (%s)\x1b[0m',
+      logger.verbose(util.format('\x1b[36;1m%s (%s) left %s (%s)\x1b[0m',
                   ircline.nick, ircline.prefix, ircline.params[0],
                   ircline.params[1]));
     }
     else if (evt == 'QUIT') {
-      logger.log(util.format('\x1b[36;1m%s (%s) quit (%s)\x1b[0m',
+      logger.verbose(util.format('\x1b[36;1m%s (%s) quit (%s)\x1b[0m',
                   ircline.nick, ircline.prefix, ircline.params[0]));
     }
+
+    // Ping replies
     else if (evt == 'PING') {
-      logger.log('\x1b[37;1mpong!\x1b[0m');
+      logger.verbose('\x1b[37;1mpong!\x1b[0m');
     }
+
+    // MOTD
+    else if (evt == 'MOTD' || evt == 'EndOfMOTD' || evt == 'MOTDStart') {
+      logger.verbose(evt+':', ircline.params[0], ircline.params[1]);
+    }
+
+    // various pointless messages
+    else if (ircEventParamLog.indexOf(evt) !== -1) {
+      logger.verbose('*** ' + evt, ircline.params.join(' '));
+    }
+
+    // Default logging is very loud
     else {
-      if (config.loglevel >= 3) {
-        logger.log('\x1b[33;1mapp.ircevents emitted: ' + this.event,
-          arguments, '\x1b[0m');
+      if (u.config.get('loglevel') >= 3) {
+        logger.verbose('\x1b[33;1mapp.ircevents emitted: ' + this.event + ' ' +
+          util.inspect(arguments) + '\x1b[0m');
       }
     }
   });
