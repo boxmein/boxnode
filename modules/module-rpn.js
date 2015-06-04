@@ -37,7 +37,7 @@ exports.listener = function(line, words, respond, util) {
     return respond('available symbols: ' +
         Object.keys(rpn).join(', ').slice(0, 200));
   }
-  else if (sub == 'lex' && util.matchesHostname(owner, line.hostmask)) {
+  else if (sub == 'lex' && util.matchesHostname(util.config.get('owner'), line.hostmask)) {
     respond(lexRPN(words.slice(1).join(' ')));
   }
 
@@ -54,6 +54,7 @@ exports.listener = function(line, words, respond, util) {
 
     if (!authed)
       return respond('You can\'t do this!');
+
     var newsym = words[1];
     var def = words.slice(2).join(' ');
     rpn[newsym] = {
