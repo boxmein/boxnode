@@ -1,11 +1,13 @@
 exports.type = 'command';
 var _ = require('underscore');
 
+var logger = new require('toplog')({concern: 'rpn', loglevel: 'VERBOSE'});
+
 var stack = [];
 var storage = {};
 var stack_max = 100;
 
-var owner, myconfig;
+var util = null;
 
 exports.listAll = function() {
   return Object.keys(exports.getHelp());
@@ -41,12 +43,15 @@ exports.listener = function(line, words, respond, util) {
 
   else if (sub == 'add') {
     var authed = false;
-    for (var i = 0; i < myconfig.authorized.length; i++) {
-      if (util.matchesHostname(myconfig.authorized[i], line.hostmask)) {
+
+    var autheds = util.config.get('modules.rpn.authorized', []);
+    for (var i = 0; i < autheds.length; i++) {
+      if (util.matchesHostname(autheds[i], line.hostmask)) {
         authed = true;
         break;
       }
     }
+
     if (!authed)
       return respond('You can\'t do this!');
     var newsym = words[1];
@@ -79,9 +84,8 @@ exports.listener = function(line, words, respond, util) {
   stack = [];
 };
 
-exports.init = function(config, mc, alias) {
-  myconfig = mc;
-  owner = config.owner;
+exports.init = function(u, alias) {
+  util = u;
 
   try {
 
@@ -91,21 +95,20 @@ exports.init = function(config, mc, alias) {
       if (!ea.takes || !ea.gives) {
         try {
           var tg = calculateTakesGives(ea);
-          console.log('calculated takes/gives: ', tg);
+          logger.verbose('calculated takes/gives: ', tg);
           rpn[k].takes += tg.takes;
           rpn[k].gives += tg.gives;
         } catch (err) {
-          console.error('\x1b[31;1mtakes/gives calculation failed: ' + err.message + '\x1b[0m');
+          logger.warning('\x1b[31;1mtakes/gives calculation failed: ' + err.message + '\x1b[0m');
           // delete rpn[k];
         }
       }
     }
 
-    console.log('module rpn initialized. max stack: ', stack_max);
-    console.log('owner: ' + owner);
+    logger.info('module rpn initialized. max stack: ', stack_max);
   }
   catch (err) {
-    console.error('error initializing rpn: ', err);
+    logger.error('error initializing rpn: ', err);
     throw err;
   }
 
@@ -153,7 +156,7 @@ function lexRPN(words) {
         valstr += words[i];
       }
 
-      console.log('found string:', valstr);
+      logger.verbose('found string:', valstr);
 
       lexed.push(valstr.toString());
 
@@ -256,7 +259,7 @@ function evaluate(tok, recursionLevel) {
       if (recursionLevel < 7)
         toks.forEach(evaluate, recursionLevel + 1);
       else {
-        console.log('Stack limit reached - stopping recursion');
+        logger.warning('Stack limit reached - stopping recursion');
         stack.push('StackOverflowError');
       }
     }
