@@ -2,9 +2,11 @@
 var Q = require('q');
 var _ = require('underscore');
 
+var logger = new require('../toplog.js')({concern: 'operator', loglevel: 'VERBOSE'});
+
 exports.type = 'command';
 
-var config, nick, owner, DEBUG;
+var util = null;
 
 exports.listAll = function() {
   return Object.keys(exports.getHelp());
@@ -35,32 +37,29 @@ exports.listener = function(line, words, respond, util) {
   var call = this.event.slice(9);
 
   // 1. *I* have to be ops
-  util.isOperatorIn(nick, line.params[0]).done(function(y) {
+  util.isOperatorIn(util.config.get('nick', 'boxnode'), line.params[0]).done(function(y) {
     if (!y) {
-      if (config.loud)
-        respond(config.not_an_op || 'I am not an op!');
+      if (util.config.get('loud', false))
+        respond(util.config.get('modules.operator.not_an_op', 'I am not an op!'));
       return;
     }
 
     // 2. the caller has to be permitted to do the thing
     var permitted = util.matchesHostname(owner, line.hostmask);
 
-    permitted = permitted || _.any(config.authorized, function(ea) {
+    permitted = permitted || _.any(util.config.get('modules.operator.authorized'), function(ea) {
       return util.matchesHostname(ea, line.hostmask);
     });
 
-    if(DEBUG && permitted)
-      console.log('caller permitted: their hostname is allowed');
+    logger.verbose('caller permitted: their hostname is allowed');
 
     var oppromise, voicepromise;
 
-
-    if (config.ops_allowed) {
+    if (util.config.get('modules.operator.ops_allowed', false)) {
       var oppromise = util.isOperatorIn(line.nick, line.params[0])
                           .then(function(y) {
         permitted = permitted || y;
-        if (DEBUG && y)
-          console.log('caller permitted: ops_allowed && they\'re an op');
+        logger.verbose('caller permitted: ops_allowed && they\'re an op');
       });
     } else {
       oppromise = Q.defer();
@@ -69,12 +68,11 @@ exports.listener = function(line, words, respond, util) {
     }
 
 
-    if (config.voices_allowed) {
+    if (util.config.get('modules.operator.voices_allowed', false)) {
       var voicepromise = util.isVoiceIn(line.nick, line.params[0])
                              .then(function(y) {
         permitted = permitted || y;
-        if (DEBUG && y)
-          console.log('caller permitted: voices_allowed && they\'re a voice');
+        logger.verbose('caller permitted: voices_allowed && they\'re a voice');
       });
     } else {
       voicepromise = Q.defer();
@@ -86,12 +84,12 @@ exports.listener = function(line, words, respond, util) {
     Q.all([voicepromise, oppromise]).then(function() {
 
       if (!permitted) {
-        if (config.loud)
-          respond(config.not_allowed || 'You are not allowed to do this!');
+        if (util.config.get('modules.operator.loud'))
+          respond(util.config.get('modules.operator.not_allowed') || 'You are not allowed to do this!');
         return;
       }
 
-      console.log('Performing op command: ' + call)
+      logger.debug('Performing op command: ' + call)
 
       // Actually do the shit they told us to
 
@@ -130,12 +128,7 @@ exports.listener = function(line, words, respond, util) {
   });
 };
 
-exports.init = function(cfg, myconfig, alias) {
+exports.init = function(u, alias) {
   alias('op', 'operator.op');
-
-  DEBUG = cfg.debug;
-
-  config = myconfig;
-  nick = cfg.nick;
-  owner = cfg.owner;
+  util = u;
 };

@@ -2,7 +2,6 @@ exports.type = 'command';
 var fs = require('fs');
 var lastUsed = {};
 var logFile = null;
-var myconfig = null;
 
 
 exports.listAll = function() {
@@ -38,11 +37,10 @@ exports.listener = function(line, words, respond) {
 
   fs.write(logFile, endstr + '\r\n', null, 'utf8', function() {
     respond('bug report successful!');
-  })
+  });
 };
 
-exports.init = function(config, mc, alias) {
+exports.init = function(u, alias) {
   logFile = fs.openSync('bug.log', 'a');
-  myconfig = mc;
   fs.write(logFile, 'started logging at ' + Date.now() + '\n', 'utf8');
 };

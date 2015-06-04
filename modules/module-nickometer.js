@@ -34,5 +34,5 @@ exports.listener = function(line, words, respond) {
   respond('The nickname `' + nick + '` gets a lameness score of ' + score + '!');
 };
 
-exports.init = function(config, myconfig, alias) {};
+exports.init = function(util, alias) {};
 

@@ -66,7 +66,7 @@ exports.listener = function(line, words, respond) {
 
 
 
-exports.init = function(config, myconfig, alias) {};
+exports.init = function(util, addAlias) {};
 
 
 

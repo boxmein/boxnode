@@ -1,8 +1,5 @@
 exports.type = 'command';
 
-// Store the 'message' configuration value as a global.
-var message;
-
 exports.listAll = function() {
   return ['*'];
 };
@@ -15,9 +12,9 @@ exports.getHelp = function() {
 
 
 exports.listener = function(line, words, respond) {
-  respond(message);
+  respond(getMessage());
 };
 
-exports.init = function(config, myconfig, alias) {
-  message = myconfig.str;
+exports.init = function(util, alias) {
+  getMessage = util.config.get.bind(util.config, 'module.version.str');
 };

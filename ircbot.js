@@ -74,7 +74,7 @@ app.commandevents.on('error', function(err, module, line) {
 
   app.events.emit('module.unload', module.name);
 
-  if (config.announce_module_crash) {
+  if (config.get('announce_module_crash', false)) {
     var msg = config.announce_module_message || 'module crashed: "%module"';
     respond(line.params[0], line.nick, msg.replace('%module', module.name));
   }
@@ -86,7 +86,21 @@ app.ircevents.on('error', function() {
 });
 
 
+//
+// Config API
+//
 
+var configManager, config;
+
+config = configManager = app.config = require('./config_manager.js');
+app.config.reload();
+
+app.util.config = {};
+app.util.config.get = app.config.get.bind(configManager);
+
+app.events.on('reloadconfig', function() {
+  app.config.reload();
+});
 
 //
 // Some useful functions
@@ -280,6 +294,8 @@ app.util.isChannel = isChannel;
 
 /** Respond to a message in <channel> to <nick>, with <data>. */
 function respond(channel, nick, data) {
+  if (channel == app.config.get('nick'))
+    channel = nick;
   respond.PRIVMSG(channel, nick + ': ' + data);
 }
 
@@ -305,6 +321,8 @@ app.util.respond = respond;
 function addAlias(from, to) {
   app.aliases[from] = to;
 }
+
+app.util.addAlias = addAlias;
 
 function deleteAlias(from) {
   delete app.aliases[from];
@@ -359,11 +377,12 @@ app.events.on('sock.connect', function() {
 
   logger.info('connecting to the server');
 
-  if (config.server_password)
-    writeToSocket('PASS ' + config.server_password);
+  if (app.config.get('server_password'))
+    writeToSocket('PASS ' + app.config.get('server_password'));
 
-  writeToSocket('NICK ' + config.nick);
-  writeToSocket('USER ' + config.username + ' * * :' + config.realname);
+  writeToSocket('NICK ' + app.config.get('nick', 'boxnode'));
+  writeToSocket('USER ' + app.config.get('username', 'boxnode') + ' * * :' +
+                app.config.get('realname', '<realname unspecified>'));
 });
 
 
@@ -414,16 +433,9 @@ app.ircevents.on('PRIVMSG', function(line) {
   if (line.params.length == 2 &&
       line.params[1] != '') {
 
-    var command_char = undefined;
-    for (var i = 0; i < config.channels.length; i++) {
-      if (config.channels[i].name == line.params[0])  {
-        command_char = config.channels[i].command_character;
-        break;
-      }
-    }
-    command_char = command_char || config.command_character;
+    var command_char = app.config.get('command_character');
 
-    if (line.params[1].indexOf(config.command_character) === 0) {
+    if (line.params[1].indexOf(command_char) === 0) {
       // Fire a command event with the command name.
       // Pass the handler the IRC line,
       // a list of all words the command was called with,
@@ -493,7 +505,7 @@ app.ircevents.on('JOIN', function(line) {
     return;
 
   // ignore own joins
-  if (line.nick == config.nick)
+  if (line.nick == app.config.get('nick'))
     return;
 
   channels[channel] = channels[channel] || {};
@@ -533,7 +545,7 @@ app.ircevents.on('PART', function(line) {
 // Ready to join/do everything
 app.events.on('ready', function(line) {
   // we're connected to the server! let's try and join some channels!
-  writeToSocket('JOIN ' + config.channels.map(function(ea) {
+  writeToSocket('JOIN ' + app.config.get('channels').map(function(ea) {
     return ea.name;
   }).join(','));
 });
@@ -542,15 +554,15 @@ app.events.on('ready', function(line) {
 
 
 // Nickserv authentication
-if (config.auth && config.auth.type == 'NickServ') {
+if (app.config.get('auth') && app.config.get('auth').type == 'NickServ') {
   logger.verbose('NickServ auth setup, setting a notice listener...');
 
   app.ircevents.on('Notice', function(line) {
     // Actual NickServ
     if (line.nick == 'NickServ' && line.hostname == 'services.' &&
         line.params[1].indexOf('identify') !== -1) {
-      logger.info('Identifying to NickServ as ' + config.auth.name);
-      writeToSocket('PRIVMSG NickServ :identify ' + config.auth.name + ' ' + config.auth.password);
+      logger.info('Identifying to NickServ as ' + app.config.get('auth').name);
+      writeToSocket('PRIVMSG NickServ :identify ' + app.config.get('auth').name + ' ' + app.config.get('auth').password);
     }
   });
 }
@@ -638,7 +650,7 @@ app.events.on('module.newbare', function(module) {
     // If init function throws, then don't load the module.
     if (module.init && typeof module.init == 'function') {
       try {
-        var ret = module.init(config, config.modules[module.name], addAlias);
+        var ret = module.init(app.util, addAlias);
       } catch (err) {
         app.events.emit('module.errorinit', module);
       }
@@ -646,10 +658,10 @@ app.events.on('module.newbare', function(module) {
     }
 
     if (!module.getHelp)
-      module.getHelp = function() { return {'*': 'no help defined :^('}; };
+      module.getHelp = function() { return {'*': ''}; };
 
     if (!module.listAll)
-      module.listAll = function() { return ['no', 'list', 'defined', ':^('] };
+      module.listAll = function() { return []; };
 
     // use a cushioned event listener that responds to throwing
     module._listener = cushionListener(module);
@@ -664,11 +676,16 @@ app.events.on('module.newbare', function(module) {
 
     // also silently fail
     if (!module.init) {
-      app.events.init('module.errorinit', module);
+      app.events.emit('module.errorinit', module, {message: 'no init function'});
       return;
     }
 
-    module.init(config, app.events, app.ircevents, app.commandevents, app.util, config.modules[module.name]);
+    try {
+      module.init(app.events, app.ircevents, app.commandevents, app.util);
+    } catch (err) {
+      app.events.emit('module.errorinit', module, err);
+      // clean up added event listeners?
+    }
   }
 
   app.modules[module.name] = module;
@@ -691,8 +708,6 @@ app.events.on('module.unload', function(name) {
   if (app.modules[name].unload)
     app.modules[name].unload();
 });
-
-
 
 // Quit handlers
 app.events.on('quit.*', function(reason) {
@@ -834,7 +849,7 @@ app.events.emit('module.newbare', {
     var permission = false;
 
     var authorizeds = _.flatten([
-      config.owner, config.modules.system.authorized
+      app.config.get('owner'), app.config.get('modules.system.authorized')
     ], true);
 
     for (var i=0;i<authorizeds.length;i++) {
@@ -905,6 +920,10 @@ app.events.emit('module.newbare', {
         respond('success!');
         break;
 
+      case 'reloadconfig':
+        app.events.emit('reloadconfig');
+        break;
+
       // system.eval <javascript>
       case 'eval':
         app.events.emit('system.eval', line);
@@ -923,7 +942,7 @@ app.events.emit('module.newbare', {
 
 // Alias editor
 app.events.emit('module.newbare', (function() {
-  var myconf = config.modules.alias || {'whitelist': false};
+  var myconf = config.get('modules.alias', {'whitelist': false});
   return {
     type: 'command',
     name: 'alias',
@@ -961,7 +980,7 @@ app.events.emit('module.newbare', (function() {
         AUTHORIZED = true;
       }
       else if (myconf.whitelist === true) {
-        AUTHORIZED = matchesHostname(config.owner, line.hostmask);
+        AUTHORIZED = matchesHostname(config.get('owner'), line.hostmask);
       }
       else if (myconf.whitelist instanceof Array) {
 
@@ -1076,8 +1095,8 @@ app.events.emit('module.newbare', {
 
 
 // Announce its own character if my name and some specific words are mentioned
-if (config.announce_character) {
-  config.announce_character_message = config.announce_character_message || "just use %char";
+if (app.config.get('announce_character', true)) {
+  var msg = app.config.get('announce_character_message') || 'just use %char';
   app.ircevents.on('PRIVMSG', function(line) {
     var chan = line.params[0];
     var user = line.nick;
@@ -1088,8 +1107,7 @@ if (config.announce_character) {
           // text.indexOf('command') !== -1 ||
           text.indexOf('character') !== -1 ||
           text.indexOf('prefix') !== -1) {
-        respond(chan, user, config.announce_character_message.replace('%char',
-                            config.command_character));
+        respond(chan, user, msg.replace('%char', config.get('command_character')));
       }
     }
 
@@ -1116,7 +1134,7 @@ if (!DEBUG) {
 }
 
 // Fire new module events for every module
-config.modules_enabled.forEach(function(ea) {
+config.get('modules_enabled').forEach(function(ea) {
   logger.verbose('firing module.new for ' + ea);
   app.events.emit('module.new', ea);
 });
@@ -1142,8 +1160,8 @@ sock.setEncoding('UTF-8');
 sock.setTimeout(256);
 
 sock.connect({
-  host: config.server,
-  port: config.port
+  host: app.config.get('server'),
+  port: app.config.get('port')
 }, app.events.emit.bind(app.events, 'sock.connect'));
 
 

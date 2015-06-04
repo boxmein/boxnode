@@ -7,10 +7,10 @@
 */
 exports.type = 'event';
 
-exports.init = function(config, app, irc, command) {
+exports.init = function(app, irc, command, util) {
 
   // only enabled at loglevel >=3
-  if (config.loglevel <3)
+  if (util.config.get('loglevel') <3)
     return;
 
   /*
@@ -21,7 +21,7 @@ exports.init = function(config, app, irc, command) {
   */
   app.onAny(function() {
     console.log('\x1b[36;1mapp.events emitted: ' + this.event,
-      config.loglevel > 3 ? arguments : '', '\x1b[0m');
+      util.config.get('loglevel') > 3 ? arguments : '', '\x1b[0m');
   });
 
 
@@ -34,7 +34,7 @@ exports.init = function(config, app, irc, command) {
   */
   command.onAny(function() {
     console.log('\x1b[33;1mapp.commandevents emitted: ' + this.event,
-      config.loglevel > 3 ? arguments : '', '\x1b[0m');
+      util.config.get('loglevel') > 3 ? arguments : '', '\x1b[0m');
   });
 
   /*
@@ -47,6 +47,6 @@ exports.init = function(config, app, irc, command) {
   */
   irc.onAny(function() {
     console.log('\x1b[37;0mapp.ircevents emitted: ' + this.event,
-      config.loglevel > 3 ? arguments : '', '\x1b[0m');
+      util.config.get('loglevel') > 3 ? arguments : '', '\x1b[0m');
   });
 };

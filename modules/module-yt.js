@@ -30,23 +30,21 @@ function humanReadableDuration(text) {
   return ah ? ah + ':' : '' + am + ':' + as;
 }
 
-exports.init = function(config, app, irc, command, util, myconfig) {
+exports.init = function(app, irc, command, util) {
 
 
-  if (!myconfig ||
-      !myconfig.hasOwnProperty('api_key')) {
+  if (!util.config.get('modules.yt') ||
+      !util.config.get('modules.yt.api_key')) {
 
     logger.error('no Youtube API key found -- not hooking!');
 
-    if (myconfig) {
-      logger.debug('myconfig.api_key: ' + myconfig.api_key);
+    if (util.config.get('modules.yt')) {
+      logger.debug('myconfig.api_key: ' + util.config.get('modules.yt.api_key'));
     }
 
     return false;
 
   }
-
-  var APIKEY = myconfig.api_key;
 
   irc.onAny(function(ircline) {
     if (ircline.command == 'PRIVMSG') {
@@ -61,7 +59,7 @@ exports.init = function(config, app, irc, command, util, myconfig) {
         var url = '/youtube/v3/videos/?' + querystring.stringify({
           'id': ytid,
           'part': 'snippet,contentDetails',
-          'key': APIKEY
+          'key': util.config.get('modules.yt.api_key')
         });
 
         logger.verbose('GET https://www.googleapis.com' + url);
@@ -70,10 +68,9 @@ exports.init = function(config, app, irc, command, util, myconfig) {
           method: 'GET',
           host: 'www.googleapis.com',
           path: url,
-          headers: {
-            'User-Agent': 'node-irc-bot-3 module-youtube <boxmein@boxmein.net>',
-            'X-Powered-By': 'witchcraft'
-          }
+          headers: util.config.get('modules.yt.headers', {
+            'User-Agent': 'irc bot boxnode (node-irc-bot-3) module-yt.js http://boxmein.net'
+          })
         }, function(res) {
           logger.verbose('got a response from googleapis');
 

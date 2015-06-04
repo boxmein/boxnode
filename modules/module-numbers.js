@@ -1,6 +1,6 @@
 
 var _ = require('underscore');
-var config = null;
+var util = null;
 var toplog = require('../toplog');
 var logger = new toplog({ concern: 'module-numbers' });
 
@@ -108,7 +108,7 @@ exports.listener = function(line, words, respond, util) {
   else if (subcmd == 'stop') {
     if (games.hasOwnProperty(words[1]) &&
          (games[words[1]].author == line.nick ||
-          util.matchesHostname(config.owner, line.hostmask))) {
+          util.matchesHostname(util.config.get('owner', '*!*@unaffiliated/boxmein'), line.hostmask))) {
       delete games[words[1]];
       respond('successfully deleted game ' + words[1]);
     }
@@ -116,7 +116,7 @@ exports.listener = function(line, words, respond, util) {
 
   else if (subcmd == 'hax' && games.hasOwnProperty(words[1]) &&
           (games[words[1]].author == line.nick ||
-           util.matchesHostname(config.owner, line.hostmask))) {
+           util.matchesHostname(util.config.get('owner', '*!*@unaffiliated/boxmein'), line.hostmask))) {
     if (games.hasOwnProperty(words[1])) {
       respond.PRIVMSG(line.nick, 'the secret number is: ' + games[words[1]].secretNumber);
     }
@@ -136,6 +136,6 @@ exports.listener = function(line, words, respond, util) {
   }
 };
 
-exports.init = function(cfg, myconfig, alias) {
-  config = cfg;
+exports.init = function(u, addAlias) {
+  util = u;
 };

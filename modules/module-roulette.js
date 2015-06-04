@@ -2,7 +2,8 @@
   Russian Roulette :D
 */
 
-var cfg, underscore = require('underscore');
+var util = null
+  , underscore = require('underscore');
 
 exports.type = 'command';
 
@@ -32,7 +33,7 @@ exports.getHelp = function() {
 
 function punish(line, target, respond) {
   target = target || '*!*@' + line.hostname;
-  if (cfg.punishment.type.indexOf('ban') !== -1) {
+  if (util.config.get('punishment.type').indexOf('ban') !== -1) {
     respond.MODE(line.params[0], '+b', target);
 
     setTimeout(function() {
@@ -46,6 +47,8 @@ function punish(line, target, respond) {
   }
 }
 
+var russian_chances = util.config.get('modules.roulette.chances.russian', DEFAULT_CHANCES.russian);
+
 exports.listener = function(line, words, respond) {
   var split = this.event.split('.');
 
@@ -56,14 +59,14 @@ exports.listener = function(line, words, respond) {
 
   switch (split[1]) {
     case 'russian':
-      if (Math.random() < cfg.chances.russian) {
+      if (Math.random() < russian_chances) {
         respond('Bang!');
         punish(line, undefined, respond);
       } else {
         respond('The gun clicks.');
-        cfg.chances.russian += cfg.chances.russian;
-        if (cfg.chances.russian >= 1)
-          cfg.chances.russian = DEFAULT_CHANCES.russian;
+        russian_chances += util.config.get('modules.roulette.chances.russian', DEFAULT_CHANCES.russian);
+        if (russian_chances >= 1)
+          russian_chances = util.config.get('modules.roulette.chances.russian', DEFAULT_CHANCES.russian);
       }
       break;
 
@@ -72,10 +75,12 @@ exports.listener = function(line, words, respond) {
         respond('You forgot a target! See `help roulette.chancekick`');
         return;
       }
-      if (Math.random() < cfg.chances.chancekick) {
+      if (Math.random() < util.config.get('modules.roulette.chances.chancekick',
+                              DEFAULT_CHANCES.chancekick)) {
         respond('Booted the target: ' + words[1]);
         respond.RAW('KICK ' + line.params[0] + ' ' + words[1]);
-      } else if (Math.random() < cfg.chances.chancekick_backfire) {
+      } else if (Math.random() < util.config.get('modules.roulette.chances.chancekick_backfire',
+                              DEFAULT_CHANCES.chancekick_backfire)) {
         respond('Backfired!');
         respond.RAW('KICK ' + line.params[0] + ' ' + line.nick);
       }
@@ -84,11 +89,8 @@ exports.listener = function(line, words, respond) {
   }
 };
 
-exports.init = function(config, myconfig, alias) {
-  cfg = myconfig;
-
-  cfg.chances = _.defaults(cfg.chances, DEFAULT_CHANCES);
-  cfg.punishment = _.defaults(cfg.punishment, DEFAULT_PUNISHMENT);
+exports.init = function(u, alias) {
+  util = u;
 
   alias('rr', 'roulette.russian');
   alias('k', 'roulette.chancekick');
