@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "C:\\Users\\Johannes\\Documents\\Projects\\Development\\node-irc-bot-3"
+		}
+	],
+
+  "settings": {
+    "tab_size": 2,
+    "translate_tabs_to_spaces": true
+  }
+}
