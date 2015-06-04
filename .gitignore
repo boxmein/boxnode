@@ -2,3 +2,6 @@
 configs.yml
 # You can keep your bug logs too
 bug.log
+
+# Sublime crud
+*.sublime-workspace
