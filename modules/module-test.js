@@ -1,115 +1,205 @@
-/*
-  Test module of type 'command'
-  Use this as a sort of starting point for your own modules!
 
-  For simplicity's sake, I'll assume that your command character is !. Make sure
-  to configure it with the property "command_character".
+// let's inspect everything we come across
 
-  The module's 'name' will be this file's name without module- and .js.
-  The module can be loaded by adding the module's name to a list under the
-  configuration, or by using the builtin `!module.load` functionality.
+/* We'll describe a different `util` later - need to distinguish! */
+var nodeutil = require('util');
+
+/* Gotta love underscore */
+var _ = require('underscore');
+
+/* This is a logger I wrote with log levels and all sorts of bullcrap. Really
+  useful, so using this gets you timestamps, log levels and filtering for free!
+  Plus the logs look really neat with timestamps lining the left edge.
+
+  Also, the "concern" property lets every logger instance name what they're
+  logging for.
 */
+var logger = new require('../toplog')({concern: 'test', loglevel: 'INFO'});
 
 
 /*
-  This module exposes a command (or many), as well as providing help and a list
-  of all the commands it exposes. Both of those are highly recommended.
+  Hi!
 
-  The other type of module, 'event', gets a bit more power and the ability to
-  hook into all three event streams.
+  This is the "test" module, which is meant to be very loud and document every-
+  thing that is going on in an average module.
+
+  The module also has a hidden "name" property, which gets assigned according
+  to the actual filename of this script. Modules are loaded according to their
+  names, and files are loaded by concatenating the module name with a file name
+  like "module-" + name + ".js" .
+
+  As the type specifies, this is a "command"-type module, meaning it forfeits
+  access to the raw event streams to become better structured and reloadable.
+
+  The other type that exists is "event"-type modules, which you can read about
+  in 'module-logging.js'.
 */
 exports.type = 'command';
 
-// Store the 'message' configuration value as a global.
-var message;
-
-
-
 /*
-  Return an array filled with strings, each of which is the name of a subcommand
-  you define in this module's listener.
+  This is what will be concatenated into a string when a user calls `list` on
+  your module. You'll most likely need to put commands here that are accessible
+  via this module!
 
-  The listener function is called when '!module' is used, and when '!module.X'
-  is used. You can use the X to define different kinds of commands in a single
-  module. Here you can list all of the various X-es you define.
+  By convention, list a * command when you don't need to specify a sub-command
+  in order to use this module.
 
-  List a * too if your listener works without an X.
+  A simple trick is to do `Object.keys(exports.getHelp())` as the return value
+  to this, which will keep getHelp and listAll in sync.
 */
 exports.listAll = function() {
   return ['*'];
 };
 
 /*
-  Define a short overview of what your various commands do.
-  The format I've used throughout my modules is this:
+  This returns an object with keys as the possible sub-commands and values as
+  a documentation on what the subcommands do.
 
-  `command <mandatory-argument> [optional-argument]` - help here.
+  A convention is to write the documentation like this:
 
-  You can also use three dots like <mandatory-argument...> to specify that the
-  rest of the line of text is used as the mandatory argument.
+    `command <mandatory-argument> [optional argument]` - description here
+
+  ...or
+
+    `command <mandatory list of arguments...>` - description here.
+
+  The syntax is kind of common and should make sense most of the time. Adapt
+  as necessary.
+
+  Also, use backticks to mark out any actual commands  like you would Markdown.
 */
 exports.getHelp = function() {
   return {
-    '*': 'test command! responds with hello and how it was called.'
+    '*': '`test` - test command! responds with hello and how it was called.'
   };
 };
 
 /*
 
-  This function is called every time someone uses !command or !command.X.
+  This is what will be run every time your module is called, which means all
+  events on the `test.*` wildcard, for this module. The module's name is inside
+  the filename.
 
-  The `this` value is set to the event object passed around by EventEmitter2.
-  To obtain the X from the event name, simply cut off your module name from the
-  `this.event` property.
+  You get passed four parameters.
 
-  The first argument to the function is a data-structure defining an IRC line.
-  It looks approximately like this:
+  First: the IRC line (a generic object containing everything you'd want to
+    know about the message that caused this event).
 
-  {  prefix: 'boxmein!~boxmein@unaffiliated/boxmein',
-     nick: 'boxmein',
-     username: '~boxmein',
-     hostname: 'unaffiliated/boxmein',
-     hostmask: 'boxmein!~boxmein@unaffiliated/boxmein',
-     numeric: 'PRIVMSG',
-     command: 'PRIVMSG',
-     params: [ '##powder-bots', '\\list system' ]
-  }
+  This is what an IRC line looks like:
 
-  The second argument is a list of all words that the user spoke in the IRC line
-  including the command.
+    ":NickServ!NickServ@services. NOTICE boxnode :You gotta identify bro\r\n"
+    :<prefix>                     <num>  <params...>                    \r\n
 
-  [ '\\list', 'system' ]
+    ==
 
-  The third argument is a function(string) you can call when you want to send a
-  response to the caller. It automatically fills in the IRC protocol as well as
-  prefixing the caller's username to your string.
+    {
+      "prefix": "NickServ!NickServ@services.",
+      // this is the actual command sent from the IRC server
+      "numeric": "NOTICE",
+      // if the numeric was an actual number, this translates it to text.
+      // See constants.json for the mapping.
+      "command": "NOTICE",
+      "params": [
+        "boxnode",
+        "You gotta identify bro"
+      ],
 
+      // Might not be included.
+      "nick": "NickServ",
+      "username": "NickServ",
+      "hostname": "services."
+    }
+
+  Second parameter is a list of all the words the message contained, for example
+    ["\\test.potato", "I", "am", "a", "potato"]
+
+  Third parameter is a function you can call to send a response back to the
+    user. By default, it mentions the caller too, but you can use the various
+    other respond functions attached to the object to change this.
+
+    function respond(channel, name, message) { ... }
+    respond.PRIVMSG = function (channel, message) { ... }
+    respond.MODE    = function (channel, mode, target) { ... }
+    respond.RAW     = function (raw) { ... }
+
+    (however, the "respond" copy you get into this function has the channel and
+    name properties prefilled).
+
+  Fourth parameter is a bunch of utility functions: UTIL_OBJECT
+    config.get(config_property):
+      get a configuration property. (this was changed to allow config
+      to be reloaded!)
+
+    parseIRCLine(raw_irc_line):
+      parse a string into an IRC line object
+
+    matchesHostname(pattern, hostmask):
+      check if the hostmask matches the pattern. Patterns are like regexes, but
+      * are automatically changed to (.+?).
+
+    getNames(channel):
+      returns a promise that resolves to a list of every user in a channel.
+
+    isChannel(channel):
+      returns if the first argument starts with a pound sign.
+
+    respond:
+      yes, that's the same respond you already have. Except, not prefilled in.
+
+    addAlias(from, to):
+      add a command alias from something to something else. For example,
+      "eval" is aliased to "system.evil", meaning \eval == \system.evil
+
+    isOperatorIn(nick, channel):
+      returns a promise that resolves to true if the nick is an operator in the
+      given channel.
+
+    isVoiceIn(nick, channel):
+      returns a promise that resolves to true if the nick is a voice in the
+      given channel.
+
+  Another thing:
+    Since this listener is (almost) attached to an actual event stream, its
+    `this` contains stuff from said event stream. Most important of which is
+    probably `this.event`, which is the particular IRC command the listener was
+    invoked about. For example, when `\test.potato` is run, the `this.event`
+    will be "test.potato".
 */
-exports.listener = function(line, words, respond) {
-  respond(message.replace('%cmd', this.event));
+exports.listener = function(line, words, respond, util) {
+
+  // The log level for these is VERBOSE, while the constructor set the filtered
+  // level to INFO, INFO > VERBOSE, therefore VERBOSE is not shown.
+  logger.verbose('listener#line:', nodeutil.inspect(line));
+  logger.verbose('listener#words:', nodeutil.inspect(words));
+  logger.verbose('listener#respond:', nodeutil.inspect(respond));
+  logger.verbose('listener#util:', nodeutil.inspect(util));
+
+  // Slicing off the "test." part from this.event.
+  var shortEvt = this.event.slice(5);
+
+
+  if (shortEvt == 'potato') {
+    respond(_.sample(util.config.get('modules.test.potatoes')));
+  } else {
+    var msg = util.config.get('module.test.message', 'hi! you entered %cmd!');
+    respond(msg.replace('%cmd', this.event));
+  }
 };
 
 /*
   This function is called when the module is first loaded. Here's the perfect
   place to set up variables and/or other persistent state.
 
-  The first argument is the global configuration containing the entire data
-  structure that configs.yml defines.
-
-  The second argument is a specific section of the global configuration
-  dedicated to values you might want to use with a specific module. It's under
-  the modules.<module-name> structure.
-
-  This means that config.modules.test == myconfig.
-
-  The third argument is a function(string, string) you can call with two strings
-  that will create an alias from the first argument to the second.
-
-  For example, if you want your "!test.do_the_thing" to be available as "!thing"
-  then alias("thing", "test.do_the_thing") will accomplish just that.
+  Access to the configuration is available via the util object (see above,
+  Ctrl+F UTIL_OBJECT). Also, you can attach aliases via the addAlias(from, to)
+  function passed right into the scope. It's also available in the util object.
 */
-exports.init = function(config, myconfig, alias) {
-  console.log('initialized test with ', myconfig);
-  alias('thing', 'test.do_the_thing');
-  message = myconfig.message;
+exports.init = function(util, addAlias) {
+  logger.verbose('init#util:', nodeutil.inspect(util));
+  logger.verbose('init#addAlias:', nodeutil.inspect(addAlias));
+
+  addAlias('potato', 'test.potato');
+  addAlias('otatop', 'test.otatop');
+  addAlias('asdf', 'test.asdf');
+  addAlias('sudo', 'test.sudo');
 };
