@@ -2,7 +2,7 @@
   Nickometer module for this bot
   ~boxmein
 */
-var nickometer = require('./nickometer');
+var nickometer = require('nickometer');
 
 exports.type = 'command';
 exports.listAll = function() {

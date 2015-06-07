@@ -4,7 +4,7 @@
 exports.type = 'event';
 
 var util = require('util');
-var toplog = require('../toplog');
+var toplog = require('toplog');
 
 var logger = new toplog({concern: 'irc'});
 logger.properties.colors.INFO = '37;1';

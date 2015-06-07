@@ -14,7 +14,7 @@ var _ = require('underscore');
   Also, the "concern" property lets every logger instance name what they're
   logging for.
 */
-var logger = new require('../toplog')({concern: 'test', loglevel: 'INFO'});
+var logger = new require('toplog')({concern: 'test', loglevel: 'INFO'});
 
 
 /*

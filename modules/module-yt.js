@@ -8,7 +8,7 @@
 exports.type = 'event';
 
 var https = require('https')
-  , toplog = require('../toplog')
+  , toplog = require('toplog')
   , querystring = require('querystring')
   , logger = new toplog({
     concern: 'youtube',

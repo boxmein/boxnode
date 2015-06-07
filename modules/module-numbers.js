@@ -1,7 +1,7 @@
 
 var _ = require('underscore');
 var util = null;
-var toplog = require('../toplog');
+var toplog = require('toplog');
 var logger = new toplog({ concern: 'module-numbers' });
 
 exports.type = 'command';

@@ -7,7 +7,7 @@
 
 var _ = require('underscore');
 var crypto = require('crypto');
-var toplog = require('../toplog');
+var toplog = require('toplog');
 var logger = new toplog({ concern: 'mangler' });
 
 exports.type = 'command';

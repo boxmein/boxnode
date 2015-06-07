@@ -2,7 +2,7 @@
 var Q = require('q');
 var _ = require('underscore');
 
-var logger = new require('../toplog.js')({concern: 'operator', loglevel: 'VERBOSE'});
+var logger = new require('toplog')({concern: 'operator', loglevel: 'VERBOSE'});
 
 exports.type = 'command';
 

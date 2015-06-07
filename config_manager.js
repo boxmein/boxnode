@@ -1,6 +1,6 @@
 var YAML = require('yamljs');
 
-var toplog = require('./toplog.js');
+var toplog = require('toplog');
 var logger = new toplog({concern: 'configuration', loglevel: 'VERBOSE'});
 var currentConfig = null;
 
