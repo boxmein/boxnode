@@ -158,6 +158,18 @@ exports.getHelp = function() {
       returns a promise that resolves to true if the nick is a voice in the
       given channel.
 
+    getJSON(url):
+      returns a promise that resolves to JSON data fetched from the URL.
+
+    padLeft(str, length):
+      ensures the (str) has a length of (length) by padding with zeros from the
+      left should it be too short, and cropping otherwise. Useful for dates et
+      al.
+
+    superStrip(str):
+      Removes all characters that aren't in the ASCII printable range from
+      the input. Because who needs localization?
+
   Another thing:
     Since this listener is (almost) attached to an actual event stream, its
     `this` contains stuff from said event stream. Most important of which is
