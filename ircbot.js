@@ -76,7 +76,8 @@ app.commandevents.on('error', function(err, module, line) {
 
   if (config.get('announce_module_crash', false)) {
     var msg = config.announce_module_message || 'module crashed: "%module"';
-    respond(line.params[0], line.nick, msg.replace('%module', module.name));
+    if (line && line.params && line.nick)
+      respond(line.params[0], line.nick, msg.replace('%module', module.name));
   }
 });
 
@@ -98,7 +99,7 @@ app.config.reload();
 app.util.config = {};
 app.util.config.get = app.config.get.bind(configManager);
 
-app.events.on('reloadconfig', function() {
+app.events.on('reloadconfig', function onReloadConfig() {
   app.config.reload();
 });
 
@@ -130,10 +131,8 @@ app.events.on('reloadconfig', function() {
   }
 
 */
-
-
 function parseIRCLine(ea) {
-  if (ea == '')
+  if (!ea || ea == '')
     return;
 
   var hostrx = /^(.+)!(.+)@(.+)$/;
@@ -188,8 +187,8 @@ function parseIRCLine(ea) {
 
 /** Is this IRC line valid? */
 function isValidIRCLine(line) {
-  return !(line.prefix == '' ||
-           line.command == undefined);
+  return line && !(line.prefix == '' ||
+                   line.command == undefined);
 }
 
 
@@ -198,6 +197,15 @@ function isValidIRCLine(line) {
   * surrounded with ^ and $.
   */
 function matchesHostname(a, b) {
+  logger.verbose('matchesHostname called by', matchesHostname.caller.name);
+
+  if (typeof a !== 'string') {
+    throw new Error('invalid parameter #1, string expected, got ' + typeof a);
+  }
+  if (typeof b !== 'string') {
+    throw new Error('invalid parameter #2, string expected, got ' + typeof b);
+  }
+
   var matcher = new RegExp('^' + a.replace(/[\*]/g, '(.+?)') + '$');
   // console.log(matcher);
   // console.log('matching a to b', a, b);
@@ -229,6 +237,67 @@ function paramsToString(params) {
   }
   return endstr;
 }
+
+// Returns a response object given the JSON-returning URL to query.
+// @param url {String} The URL to send a HTTP GET to
+// @returns {Deferred<object>} The parsed JSON object
+function getJSON(url) {
+  logger.info('GET ' + url);
+  var deferred = Q.defer();
+  http.get(url, function(response) {
+    var glorp = '';
+    response.setEncoding('UTF-8');
+
+    response.on('data', function(chunk) {
+      glorp += chunk;
+    });
+
+    response.on('end', function() {
+      try {
+        var data = JSON.parse(glorp);
+        deferred.resolve(data);
+      } catch (err) {
+        deferred.reject(err);
+      }
+    });
+    response.on('error', deferred.reject);
+  }).on('error', deferred.reject);
+  return deferred.promise;
+}
+
+
+// Pad a string on the left to #{length} length.
+// @param str {String} The string to pad
+// @param len {Number} the amount of zeros to add
+// @returns a string of length #{length} with zeros added to the left
+function padLeft(str, len) {
+  var zeros = '0';
+
+  for (var i = 0; i < len; i++) {
+    zeros += '0';
+  }
+
+  if (typeof str !== 'string') str = ''+str;
+
+  return (zeros + str).slice(-len);
+}
+
+// Remove all non-printable ASCII characters from the input.
+function superStrip(str) {
+  var newstr = '';
+  for (var i=0;i<str.length;i++) {
+    var ccode = str.charCodeAt(i);
+
+    if (ccode >= 0x20 && ccode <= 0x7e) {
+      newstr += str[i];
+    } else {
+      newstr += '_';
+    }
+  }
+
+  return newstr;
+}
+
 
 /** Is this word a channel? */
 function isChannel(a) {
@@ -287,7 +356,9 @@ app.util.parseIRCLine = parseIRCLine;
 app.util.matchesHostname = matchesHostname;
 app.util.getNames = getNames;
 app.util.isChannel = isChannel;
-
+app.util.getJSON = getJSON;
+app.util.padLeft = padLeft;
+app.util.superStrip = superStrip;
 
 
 // respond function.
@@ -319,12 +390,14 @@ app.util.respond = respond;
 // Alias system
 
 function addAlias(from, to) {
+  logger.debug('Added alias: ' + from + ' -> ' + to);
   app.aliases[from] = to;
 }
 
 app.util.addAlias = addAlias;
 
 function deleteAlias(from) {
+  logger.debug('Removed alias: ' + from);
   delete app.aliases[from];
 }
 
@@ -337,6 +410,8 @@ function unalias(aliased) {
   while (i --> 0 && app.aliases.hasOwnProperty(unaliased)) {
     unaliased = app.aliases[unaliased];
   }
+
+  logger.verbose('Resolved alias ' + aliased + ' to ' + unaliased);
   return unaliased;
 }
 
@@ -373,7 +448,7 @@ app.util.isVoiceIn = isVoiceIn;
 
 
 // Connection handshake
-app.events.on('sock.connect', function() {
+app.events.on('sock.connect', function onSockConnect() {
 
   logger.info('connecting to the server');
 
@@ -388,7 +463,7 @@ app.events.on('sock.connect', function() {
 
 
 // Receive data
-app.events.on('sock.data', function(chunk) {
+app.events.on('sock.data', function onSockData(chunk) {
   var lines = chunk.split('\r\n');
 
   // TODO: instead of ignoring partial IRC lines on chunk borders,
@@ -420,7 +495,7 @@ app.events.on('sock.data', function(chunk) {
 
 
 // IRC: Receive PING
-app.ircevents.on('PING', function(line) {
+app.ircevents.on('PING', function onPing(line) {
   logger.verbose('PING received, returning PONG');
   writeToSocket('PONG ' + paramsToString(line.params));
 });
@@ -428,7 +503,7 @@ app.ircevents.on('PING', function(line) {
 
 
 // IRC: PRIVMSGs
-app.ircevents.on('PRIVMSG', function(line) {
+app.ircevents.on('PRIVMSG', function onPrivmsg(line) {
   // ##boxmein, '!test'
   if (line.params.length == 2 &&
       line.params[1] != '') {
@@ -470,7 +545,7 @@ app.ircevents.on('Welcome',
 
 
 // Parse ISUPPORT lines, might be useful!
-app.ircevents.on('ISupport', function(line) {
+app.ircevents.on('ISupport', function onISupport(line) {
   var supports = line.params.slice(1, -1);
 
   _.each(supports, function(ea) {
@@ -497,7 +572,7 @@ app.ircevents.on('ISupport', function(line) {
 
 
 
-app.ircevents.on('JOIN', function(line) {
+app.ircevents.on('JOIN', function onJoin(line) {
   var channel = line.params[0]
     , channels = app.state.channels;
 
@@ -520,7 +595,8 @@ app.ircevents.on('JOIN', function(line) {
 
 
 
-app.ircevents.on('PART', function(line) {
+app.ircevents.on('PART', function onPart(line) {
+
   var channel = line.params[0]
     , channels = app.state.channels;
 
@@ -543,7 +619,8 @@ app.ircevents.on('PART', function(line) {
 
 
 // Ready to join/do everything
-app.events.on('ready', function(line) {
+app.events.on('ready', function onJoinReady(line) {
+  logger.verbose('ready to join channels!');
   // we're connected to the server! let's try and join some channels!
   writeToSocket('JOIN ' + app.config.get('channels').map(function(ea) {
     return ea.name;
@@ -557,7 +634,7 @@ app.events.on('ready', function(line) {
 if (app.config.get('auth') && app.config.get('auth').type == 'NickServ') {
   logger.verbose('NickServ auth setup, setting a notice listener...');
 
-  app.ircevents.on('Notice', function(line) {
+  app.ircevents.on('Notice', function onAuthNotice(line) {
     // Actual NickServ
     if (line.nick == 'NickServ' && line.hostname == 'services.' &&
         line.params[1].indexOf('identify') !== -1) {
@@ -580,14 +657,14 @@ function cushionListener(module) {
     try {
       module.listener.call(this, line, words, respond, util);
     } catch (err) {
-      app.commandevents.emit('error', err, module, line);
+      app.commandevents.emit('error', line, err, module);
     }
   };
 }
 
 
 // New module added (only when you add via require())
-app.events.on('module.new', function(name) {
+app.events.on('module.new', function onNewModule(name) {
   logger.info('new module: ' + name);
 
   try {
@@ -602,7 +679,7 @@ app.events.on('module.new', function(name) {
   module.name = name;
   module.path = require.resolve('./modules/module-' + name + '.js');
 
-  module.unload = function() {
+  module.unload = function onModuleUnload() {
     require.cache[module.path] = undefined;
 
     // disable the events that we hooked
@@ -612,7 +689,7 @@ app.events.on('module.new', function(name) {
     delete app.modules[module.name];
   };
 
-  module.reload = function() {
+  module.reload = function onModuleReload() {
     logger.info('\x1b[31;1mreloading module ' + name + '\x1b[0m');
 
     // if there's an unload method then unload the module first
@@ -628,7 +705,7 @@ app.events.on('module.new', function(name) {
 
 
 // Add a bare module - don't need to require()
-app.events.on('module.newbare', function(module) {
+app.events.on('module.newbare', function onNewBareModule(module) {
 
   // silently refuse to finish loading if we're missing key properties
   if (!module.type ||
@@ -692,7 +769,7 @@ app.events.on('module.newbare', function(module) {
 });
 
 
-app.events.on('module.reload', function(name) {
+app.events.on('module.reload', function onModuleReload(name) {
   logger.verbose('in module.reload listener: ' + name);
   if (!app.modules.hasOwnProperty(name))
     return;
@@ -701,7 +778,7 @@ app.events.on('module.reload', function(name) {
 });
 
 
-app.events.on('module.unload', function(name) {
+app.events.on('module.unload', function onModuleUnload(name) {
   logger.verbose('in module.unload listener: ' + name);
   if (!app.modules.hasOwnProperty(name))
     return;
@@ -710,7 +787,7 @@ app.events.on('module.unload', function(name) {
 });
 
 // Quit handlers
-app.events.on('quit.*', function(reason) {
+app.events.on('quit.*', function onQuit(reason) {
   var evt = this.event.slice(5);
   if (evt == 'sigint') {
     logger.fatal('SIGINT: exiting gracefully');
@@ -738,7 +815,7 @@ app.events.on('quit.*', function(reason) {
 
 
 // Help system
-app.commandevents.on('help', function(line, words, respond) {
+app.commandevents.on('help', function onCmdHelp(line, words, respond) {
 
   if (words.length < 2 ||
       words[1] == 'help') {
@@ -780,9 +857,8 @@ function getCommandModuleNames() {
   });
 }
 
-
 // Command-listing system
-app.commandevents.on('list', function(line, words, respond) {
+app.commandevents.on('list', function onListCmd(line, words, respond) {
   var term = words[1];
 
   if (!term) {
@@ -825,11 +901,13 @@ app.events.emit('module.newbare', {
       'raw':   '`raw <raw-irc...>` - send raw IRC protocol',
       'eval':  '`eval <code...>` - evaluate Javascript code just like that',
 
-      'ccache': '`ccache <channel>` - clear the channel names cache'
+      'ccache': '`ccache <channel>` - clear the channel names cache',
+      'reloadconfig': '`reloadconfig` - reload the configuration (might be out of sync eg nickname)',
+      'lsmod': '`lsmod` - list *all* loaded modules'
     };
   },
 
-  init: function(c, m, alias) {
+  init: function(util, alias) {
     alias('quit', 'system.quit');
     alias('join', 'system.join');
     alias('part', 'system.part');
@@ -842,7 +920,7 @@ app.events.emit('module.newbare', {
     alias('echo', 'system.echo');
   },
 
-  listener: function(line, words, respond) {
+  listener: function onSystemCmd(line, words, respond) {
 
     logger.verbose('handling system-level commands...');
 
@@ -924,6 +1002,10 @@ app.events.emit('module.newbare', {
         app.events.emit('reloadconfig');
         break;
 
+      case 'lsmod':
+        respond('*All* modules:' + _.keys(app.modules));
+        break;
+
       // system.eval <javascript>
       case 'eval':
         app.events.emit('system.eval', line);
@@ -960,14 +1042,14 @@ app.events.emit('module.newbare', (function() {
       }
     },
 
-    init: function(config, myconfig, als) {
+    init: function(util, alias) {
       als('aa', 'alias.add');
       als('ar', 'alias.remove');
       als('ua', 'alias.unalias');
       als('al', 'alias.list');
     },
 
-    listener: function(line, words, respond) {
+    listener: function onAliasCmd(line, words, respond) {
 
       var ev = this.event.split('.');
       if (ev.length < 2)
@@ -1042,14 +1124,14 @@ app.events.emit('module.newbare', {
     'unload': '`unload <module-name>` - unload the module'
   }},
 
-  init: function(c, m, alias) {
+  init: function(util, alias) {
     alias('reload', 'module.reload');
     alias('load', 'module.load');
     alias('unload', 'module.unload');
   },
 
-  listener: function(line, words, respond) {
-    if (!matchesHostname(config.owner, line.prefix)) {
+  listener: function onModuleCmd(line, words, respond, util) {
+    if (!matchesHostname(util.config.get('owner'), line.prefix)) {
       respond('you can\'t do this!');
       app.events.emit('system.unauthorized', line.nick, words[0]);
       return;
@@ -1077,7 +1159,7 @@ app.events.emit('module.newbare', {
 
       case 'load':
         var name = words[1];
-        fs.exists(__dirname + '/modules/module-'+name+'.js', function(yes) {
+        fs.exists(__dirname + '/modules/module-'+name+'.js', function doesModuleExist(yes) {
           if (yes) {
             app.events.emit('module.new', name);
             respond('sent the module.new event for module ' + name);
@@ -1097,7 +1179,7 @@ app.events.emit('module.newbare', {
 // Announce its own character if my name and some specific words are mentioned
 if (app.config.get('announce_character', true)) {
   var msg = app.config.get('announce_character_message') || 'just use %char';
-  app.ircevents.on('PRIVMSG', function(line) {
+  app.ircevents.on('PRIVMSG', function onAnnouncePrivmsg(line) {
     var chan = line.params[0];
     var user = line.nick;
     var text = line.params[1].toLowerCase();
@@ -1134,19 +1216,19 @@ if (!DEBUG) {
 }
 
 // Fire new module events for every module
-config.get('modules_enabled').forEach(function(ea) {
+config.get('modules_enabled').forEach(function onModuleEnable(ea) {
   logger.verbose('firing module.new for ' + ea);
   app.events.emit('module.new', ea);
 });
 
 
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', function onUncaughtException(err) {
   logger.fatal('uncaught exception: ' + err.message);
   logger.verbose(err.stack);
   app.events.emit('quit.crash');
 });
 
-process.on('SIGINT', function() {
+process.on('SIGINT', function onSigint() {
   logger.verbose('sigint - quitting..');
   app.events.emit('quit.sigint');
 });
