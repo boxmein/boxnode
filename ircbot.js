@@ -822,7 +822,7 @@ app.commandevents.on('help', function onCmdHelp(line, words, respond) {
 
   if (words.length < 2 ||
       words[1] == 'help') {
-    return respond('`help <command>` - get help on a specific command');
+    return respond('`help <command>` - get help on a specific command (you\'re doing it right now! :D)');
   }
 
 
@@ -865,8 +865,7 @@ app.commandevents.on('list', function onListCmd(line, words, respond) {
   var term = words[1];
 
   if (!term) {
-    return respond('All modules: ' + getCommandModuleNames().join(', ')
-    )
+    return respond('All modules: ' + getCommandModuleNames().join(', '));
   }
 
   if (app.modules.hasOwnProperty(term) &&
@@ -889,7 +888,7 @@ app.events.emit('module.newbare', {
 
   getHelp: function() {
     return {
-      '*':     'system commands - you might be authorized to use these',
+      '*':     'system commands - you might be authorized to use these, but don\'t get your hopes up!',
       'die':   'see `quit`',
 
       'quit':  '`quit` - quit the IRC',
