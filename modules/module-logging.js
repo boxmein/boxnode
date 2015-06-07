@@ -9,10 +9,6 @@ exports.type = 'event';
 
 exports.init = function(app, irc, command, util) {
 
-  // only enabled at loglevel >=3
-  if (util.config.get('loglevel') <3)
-    return;
-
   /*
     'app.events' event stream:
     these events are sort of system-level: stuff like major IRC events (quit),
@@ -20,8 +16,7 @@ exports.init = function(app, irc, command, util) {
     EventEmitter2 lets you listen to wildcard events, eg module.*.
   */
   app.onAny(function() {
-    console.log('\x1b[36;1mapp.events emitted: ' + this.event,
-      util.config.get('loglevel') > 3 ? arguments : '', '\x1b[0m');
+    console.log('\x1b[36;1mapp.events emitted: ' + this.event, arguments, '\x1b[0m');
   });
 
 
@@ -33,8 +28,7 @@ exports.init = function(app, irc, command, util) {
     including the command) and the respond function.
   */
   command.onAny(function() {
-    console.log('\x1b[33;1mapp.commandevents emitted: ' + this.event,
-      util.config.get('loglevel') > 3 ? arguments : '', '\x1b[0m');
+    console.log('\x1b[33;1mapp.commandevents emitted: ' + this.event, arguments, '\x1b[0m');
   });
 
   /*
@@ -46,7 +40,6 @@ exports.init = function(app, irc, command, util) {
     into appropriate commands. (See constants.json)
   */
   irc.onAny(function() {
-    console.log('\x1b[37;0mapp.ircevents emitted: ' + this.event,
-      util.config.get('loglevel') > 3 ? arguments : '', '\x1b[0m');
+    console.log('\x1b[37;0mapp.ircevents emitted: ' + this.event, arguments, '\x1b[0m');
   });
 };
