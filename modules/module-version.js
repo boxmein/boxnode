@@ -16,5 +16,5 @@ exports.listener = function(line, words, respond) {
 };
 
 exports.init = function(util, alias) {
-  getMessage = util.config.get.bind(util.config, 'module.version.str');
+  getMessage = util.config.get.bind(util.config, 'modules.version.str');
 };
