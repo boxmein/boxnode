@@ -17,6 +17,29 @@ The [YAML][yaml] configuration file has comments inside - go read them! :D
 
 [yaml]: http://www.yaml.org/
 
+## Making modules
+
+There's two kinds - one that hooks straight into event streams, and another that 
+uses the "commands" event stream alone, which is more straight-forward (since commands
+are well documented) and brings with it stability. 
+
+To find out more about the 'event' kind, go check out `modules/module-logging.js`.   
+To find out more about the 'command' kind, go check out `modules/module-test.js`.  
+
+I've written a bunch of stuff into these two files about the specific module kinds, and
+these files are a good starting point for future modules.
+
+## Todo
+
+[ ] More modules (TPTnet, Google/search, xkcd)
+[ ] Extra secrets
+[ ] Command interpolation (eg `\hug {mangler.rot13 {mangler.rot13 boxmein}}`)
+[ ] Global permissions
+[ ] Reloadable 'event'-type modules
+[ ] TPT module: user- and moderator-level tools to do stuff :D
+[ ] Segregating the huge "ircbot.js" file (do I need this?)
+[ ] Pretty up the code for Github (maybe)
+
 ## Credit
 
 boxmein 2015. see the file LICENSE for a copy-pasted MIT License.
