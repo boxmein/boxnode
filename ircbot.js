@@ -1023,14 +1023,18 @@ app.events.emit('module.newbare', {
   }
 });
 
-
+//
 // Alias editor
+//
+
 app.events.emit('module.newbare',
   require('./alias_manager')(app.util, app, addAlias, deleteAlias, unalias));
 
 
-
+//
 // Module management system
+//
+
 app.events.emit('module.newbare',
   require('./module_manager')(app));
 
@@ -1108,6 +1112,7 @@ sock.connect({
 
 
 logger.verbose('attaching event handlers');
+
 sock.on('error', app.events.emit.bind(app.events, 'sock.error'));
 sock.on('data', app.events.emit.bind(app.events, 'sock.data'));
 sock.on('end', app.events.emit.bind(app.events, 'sock.end'));
