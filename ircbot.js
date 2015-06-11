@@ -1,10 +1,11 @@
 var net     = require('net')
   , path    = require('path')
+  , http    = require('http')
   , fs      = require('fs')
   , _       = require('underscore')
   , Q       = require('q')
   , Emitter = require('eventemitter2').EventEmitter2
-  , toplog  = require('./toplog.js')
+  , toplog  = require('toplog')
   // stolen from https://github.com/SBSTP/irc/blob/master/constants.go
   , CONSTS  = require('./constants.json')
   , _CONSTS = _.invert(CONSTS);
@@ -47,6 +48,9 @@ var app = {
     // isVoiceIn
     // addAlias
     // config.get
+    // getJSON
+    // padLeft
+    // superStrip
   },
 
   // command aliases
@@ -375,6 +379,13 @@ respond.PRIVMSG = function(channel, data) {
   respond.RAW('PRIVMSG ' + channel + ' :' + data);
 };
 
+// Send a NOTICE as the response.
+respond.NOTICE = function(target, data) {
+  respond.RAW('NOTICE ' + target + ' :' + data);
+};
+
+// respond.private = prefilled respond.NOTICE
+
 // Apply MODEs
 respond.MODE = function(channel, mode, target) {
   respond.RAW('MODE ' + channel + ' ' + mode + ' :'+target);
@@ -525,6 +536,8 @@ app.ircevents.on('PRIVMSG', function onPrivmsg(line) {
         newrespond[k] = respond[k];
       }
 
+      // add a "private" response option
+      newrespond['private'] = newrespond.NOTICE.bind(newrespond, line.nick);
 
       app.commandevents.emit(unalias(command),
         line, words, newrespond, app.util);
@@ -1048,15 +1061,14 @@ if (app.config.get('announce_character', true)) {
     var user = line.nick;
     var text = line.params[1].toLowerCase();
 
-    if (text.indexOf(config.nick) !== -1) {
+    if (text.indexOf(app.config.get('nick', 'boxnode')) !== -1) {
       if (text.indexOf('control') !== -1 ||
           // text.indexOf('command') !== -1 ||
           text.indexOf('character') !== -1 ||
           text.indexOf('prefix') !== -1) {
-        respond(chan, user, msg.replace('%char', config.get('command_character')));
+        respond(chan, user, msg.replace('%char', app.config.get('command_character')));
       }
     }
-
   });
 }
 
@@ -1088,7 +1100,7 @@ config.get('modules_enabled').forEach(function onModuleEnable(ea) {
 
 process.on('uncaughtException', function onUncaughtException(err) {
   logger.fatal('uncaught exception: ' + err.message);
-  logger.verbose(err.stack);
+  logger.verbose(require('util').inspect(err));
   app.events.emit('quit.crash');
 });
 
