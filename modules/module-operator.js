@@ -45,7 +45,7 @@ exports.listener = function(line, words, respond, util) {
     }
 
     // 2. the caller has to be permitted to do the thing
-    var permitted = util.matchesHostname(owner, line.hostmask);
+    var permitted = util.matchesHostname(util.config.get('owner'), line.hostmask);
 
     permitted = permitted || _.any(util.config.get('modules.operator.authorized'), function(ea) {
       return util.matchesHostname(ea, line.hostmask);
