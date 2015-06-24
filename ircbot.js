@@ -548,7 +548,8 @@ app.ircevents.on('PRIVMSG', function onPrivmsg(line) {
       // add a "private" response option
       newrespond['private'] = newrespond.NOTICE.bind(newrespond, line.nick);
 
-      app.commandevents.emit(unalias(command),
+      // remove leading asterisks to prevent running all commands
+      app.commandevents.emit(unalias(command).replace(/^\*+/g, ''),
         line, words, newrespond, app.util);
     }
   }
