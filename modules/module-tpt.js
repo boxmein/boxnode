@@ -24,7 +24,7 @@ exports.getHelp = function() {
     '*': '`tpt` - various powdertoy related commands. Try `list tpt`.',
     'profile': '`tpt.profile <username|ID>` - get data on a TPT user',
     'download': '`tpt.download <type> <platform>` - get the download link for some TPT (use `tpt.download list` to see all types)',
-    'tptnet-profile': '`tpt.tptnet-profile <username|ID>` - get data on a TPT user on thepowdertoy.net',
+    'profile-tptnet': '`tpt.profile-tptnet <username|ID>` - get data on a TPT user on thepowdertoy.net',
     'save': '`tpt.save <ID>` - view basic details about a TPT save',
     'save-tptnet': '`tpt.save-tptnet <ID>` - view basic details about a TPTNet save',
     'save-detailed': '`tpt.save-details <ID>` - view a lot of details about a TPT save'
@@ -98,10 +98,10 @@ var profileString = 'User %s (ID %d) - Age %s, Location %s, Site %s; %d saves \
 (average score %s, highest %s); %d reputation, %d threads and %d posts.';
 
 listeners['profile'] =
-listeners['tptnet-profile'] = function(evt, line, words, respond, util) {
+listeners['profile-tptnet'] = function(evt, line, words, respond, util) {
   var url;
 
-  if (evt == 'tptnet-profile') {
+  if (evt == 'profile-tptnet') {
     url = util.config.get('modules.tpt.endpoint.tptnet');
   }
   else {
