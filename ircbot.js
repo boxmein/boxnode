@@ -941,7 +941,6 @@ app.events.emit('module.newbare', {
     alias('aa'  , 'system.alias');
     alias('ua'  , 'system.unalias');
     alias('ra'  , 'system.rmalias');
-    alias('echo', 'system.echo');
   },
 
   listener: function onSystemCmd(line, words, respond) {
