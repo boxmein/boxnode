@@ -402,7 +402,7 @@ respond.MODE = function(channel, mode, target) {
 
 // Raw IRC for anything else.
 respond.RAW = function(data) {
-  writeToSocket(data.replace(/[\r\n]/g, ''));
+  writeToSocket(data.replace(/[\r\n]/g, '').slice(0, 511));
 };
 
 app.util.respond = respond;
