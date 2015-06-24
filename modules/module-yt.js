@@ -48,6 +48,14 @@ exports.init = function(app, irc, command, util) {
 
   irc.onAny(function(ircline) {
     if (ircline.command == 'PRIVMSG') {
+
+      // Whitelisted channels only!
+      if (util.config.get('modules.yt.whitelist', false) &&
+          util.config.get('modules.yt.channel_whitelist'[])
+            .indexOf(ircline.channel) === -1) {
+        return;
+      }
+
       logger.verbose('matching youtube URLs in the message');
       if (ircline.params[1].match(YT_URL)) {
 
