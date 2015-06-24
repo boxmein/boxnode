@@ -306,6 +306,10 @@ function superStrip(str) {
   return newstr;
 }
 
+function trim(str) {
+  return str.replace(/(^\s+|\s+$)/g, '');
+}
+
 
 /** Is this word a channel? */
 function isChannel(a) {
@@ -367,6 +371,7 @@ app.util.isChannel = isChannel;
 app.util.getJSON = getJSON;
 app.util.padLeft = padLeft;
 app.util.superStrip = superStrip;
+app.util.trim = trim;
 
 
 // respond function.
