@@ -185,6 +185,10 @@ function parseIRCLine(ea) {
     break;
   }
 
+  // some specially-named params
+  ircline.channel = ircline.params[0];
+  ircline.message = ircline.params[1];
+
   return ircline;
 }
 
