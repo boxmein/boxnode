@@ -10,8 +10,6 @@ var net     = require('net')
   , CONSTS  = require('./constants.json')
   , _CONSTS = _.invert(CONSTS);
 
-var logger = new toplog({concern: 'ircbot', loglevel: 'VERBOSE'});
-
 var app = {
   // generic system-level events
   events: new Emitter({ wildcard: true }),
