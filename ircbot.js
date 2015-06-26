@@ -668,6 +668,25 @@ if (app.config.get('auth', false) && app.config.get('auth').type == 'NickServ') 
   });
 }
 
+// Automatic channel rejoining after kicks
+if (app.config.get('autorejoin', false)) {
+  logger.info('Enabling automatic re-join after kick...');
+
+  app.ircevents.on('KICK', function onAutoRejoinKick(line) {
+    setTimeout(function() {
+      respond.RAW('JOIN ' + line.channel);
+    }, app.config.get('autorejoin_delay', 0.5));
+  });
+}
+
+// Follow invites
+if (app.config.get('follow_invites', false)) {
+  logger.info('Enabling invite following...');
+
+  app.ircevents.on('INVITE', function onFollowInvite(line) {
+    respond.RAW('JOIN ' + line.params[1]);
+  });
+}
 
 
 
