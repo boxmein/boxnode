@@ -19,11 +19,17 @@ command_character: "\\"
 announce_character: true
 announce_message: "i can be controlled with the following prefix: %char"
 
+announce_module_crash: false
+announce_module_message: "'%module' crashed!"
+
+autorejoin: false
+autorejoin_delay: 0.5
+
+follow_invites: false
+
 modules_enabled:
   - shinylogging
   - test
-  - hug
-  - hello
 
 channels:
   - name: "##boxmein"
