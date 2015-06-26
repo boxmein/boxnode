@@ -12,7 +12,7 @@ logger.properties.colors.INFO = '37;1';
 // events for which we'll just log all parameters
 var ircEventParamLog = ['ISupport', 'MOTD', 'EndOfMOTD', 'LUserChannels',
     'LUserClient', 'LUserMe', 'MyInfo', 'Welcome', 'YourHost', 'NamReply',
-    'EndOfNames', 'Created'];
+    'EndOfNames', 'Created', 'VHostAssigned'];
 
 exports.init = function(app, irc, command, u) {
 
