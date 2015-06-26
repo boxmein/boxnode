@@ -655,7 +655,7 @@ app.events.on('ready', function onJoinReady(line) {
 
 // Nickserv authentication
 if (app.config.get('auth', false) && app.config.get('auth').type == 'NickServ') {
-  logger.verbose('NickServ auth setup, setting a notice listener...');
+  logger.info('NickServ auth setup, setting a notice listener...');
 
   app.ircevents.on('NOTICE', function onAuthNotice(line) {
     // Actual NickServ
