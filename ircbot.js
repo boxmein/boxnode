@@ -89,7 +89,7 @@ app.events.on('error', function() {
 
 
 // Unload a module if it throws up
-app.commandevents.on('error', function(err, module, line) {
+app.events.on('module.crash', function(err, module, line) {
   logger.error('\x1b[31;1merror in a module:', module.name, err, '\x1b[0m');
   logger.verbose(err.stack);
 
@@ -678,7 +678,7 @@ function cushionListener(module) {
     try {
       module.listener.call(this, line, words, respond, util);
     } catch (err) {
-      app.commandevents.emit('error', line, err, module);
+      app.events.emit('module.crash', line, err, module);
     }
   };
 }
