@@ -24,6 +24,10 @@ exports.init = function(app, irc, command, u) {
         logger.verbose(evt + ' ' + arguments[1]);
     }
 
+    else if (evt == 'module.errorinit') {
+      logger.error(evt, arguments);
+    }
+
     else if (/^quit\..*/.test(evt)) {
       logger.verbose('(app) QUITTING ' + evt);
     }
