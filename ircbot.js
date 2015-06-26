@@ -657,12 +657,13 @@ app.events.on('ready', function onJoinReady(line) {
 if (app.config.get('auth', false) && app.config.get('auth').type == 'NickServ') {
   logger.verbose('NickServ auth setup, setting a notice listener...');
 
-  app.ircevents.on('Notice', function onAuthNotice(line) {
+  app.ircevents.on('NOTICE', function onAuthNotice(line) {
     // Actual NickServ
     if (line.nick == 'NickServ' && line.hostname == 'services.' &&
         line.params[1].indexOf('identify') !== -1) {
       logger.info('Identifying to NickServ as ' + app.config.get('auth').name);
       writeToSocket('PRIVMSG NickServ :identify ' + app.config.get('auth').name + ' ' + app.config.get('auth').password);
+      app.ircevents.off('NOTICE', onAuthNotice);
     }
   });
 }
