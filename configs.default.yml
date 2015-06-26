@@ -4,7 +4,17 @@ port: 6667
 server_password:
 
 debug: true
-loglevel: 4
+loglevels:
+  irc: VERBOSE
+  config_manager: DEBUG
+  autorejoin: VERBOSE
+  google: VERBOSE
+  invitefollow: VERBOSE
+  js: VERBOSE
+  mangler: VERBOSE
+  numbers: VERBOSE
+  operator: VERBOSE
+  rpn: VERBOSE
 motd:
 
 nick: boxnode

@@ -16,11 +16,20 @@ server_password:
 # Are we debugging?
 debug: true
 
-# Logging level.
-# Log level >2 will enable event stream logging (from module-logging.js).
-# Log level >3 will also enable dumping the event stream's attachments (say
-# the event for module.new attaches the module itself to the event)
-loglevel: 4
+# Set log levels for every module separately
+# Default log levels:
+# FATAL, ERROR, WARNING, INFO, DEBUG, VERBOSE
+loglevels:
+  irc: VERBOSE
+  config_manager: DEBUG
+  autorejoin: INFO
+  google: VERBOSE
+  invitefollow: INFO
+  js: INFO
+  mangler: INFO
+  numbers: INFO
+  operator: VERBOSE
+  rpn: VERBOSE
 
 # MOTD. gets displayed into the console on startup if not empty
 motd:
