@@ -3,7 +3,7 @@ var nodeutil = require('util');
 var querystring = require('querystring');
 var _ = require('underscore');
 
-var logger = new require('toplog')({concern: 'google', loglevel: 'VERBOSE'});
+var logger;
 exports.type = 'command';
 
 exports.listAll = function() {
@@ -61,7 +61,10 @@ exports.listener = function(line, words, respond, util) {
 var DEPRECATED = 'This uses an old weird Google search API that\'s '+
   'completely deprecated. This module may stop working at any time and might ' +
   'flag your computer to Google as a robot. I don\'t know.';
+
 exports.init = function(util, addAlias) {
   addAlias('gg', 'google');
+  logger = new require('toplog')({concern: 'google',
+    loglevel: util.config.get('loglevels.google', 'INFO')});
   logger.warning(DEPRECATED);
 };

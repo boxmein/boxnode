@@ -2,7 +2,7 @@
 var _ = require('underscore');
 var util = null;
 var toplog = require('toplog');
-var logger = new toplog({ concern: 'module-numbers' });
+var logger = new toplog({ concern: 'numbers' });
 
 exports.type = 'command';
 
@@ -138,4 +138,5 @@ exports.listener = function(line, words, respond, util) {
 
 exports.init = function(u, addAlias) {
   util = u;
+  logger.currprops.loglevel = util.config.get('loglevels.numbers', 'VERBOSE');
 };

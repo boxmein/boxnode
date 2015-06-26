@@ -66,7 +66,9 @@ exports.listener = function(line, words, respond) {
 
 
 
-exports.init = function(util, addAlias) {};
+exports.init = function(util, addAlias) {
+  logger.currprops.loglevel = util.config.get('loglevels.mangler', 'VERBOSE');
+};
 
 
 

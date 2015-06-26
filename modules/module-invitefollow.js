@@ -1,7 +1,9 @@
 exports.type = 'event';
-var logger = new require('toplog')({concern: 'invitefollow', loglevel: 'VERBOSE'});
 
 exports.init = function(app, irc, command, util) {
+
+  var logger = new require('toplog')({concern: 'invitefollow',
+    loglevel: util.config.get('loglevels.invitefollow', 'INFO')});
 
   logger.info('autorejoin enabled!');
 
@@ -32,7 +34,9 @@ exports.init = function(app, irc, command, util) {
       logger.verbose('the user was ok! (found in whitelist)');
     }
 
-    if (channel_ok && user_ok)
+    if (channel_ok && user_ok) {
+      logger.info('Following invite to ' + line.params[1]);
       util.respond.RAW('JOIN ' + line.params[1]);
+    }
   });
 };

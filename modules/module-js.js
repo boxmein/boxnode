@@ -1,5 +1,5 @@
 var Sandbox = require('sandbox');
-var logger = new require('toplog')({concern: 'js', loglevel: 'VERBOSE'});
+var logger;
 var box = new Sandbox();
 
 exports.type = 'command';
@@ -29,3 +29,6 @@ exports.listener = function(line, words, respond, util) {
   });
 };
 
+exports.init = function(util) {
+  logger = = new require('toplog')({concern: 'js', loglevel: util.config.get('loglevels.js', 'INFO')});
+}

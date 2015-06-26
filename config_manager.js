@@ -1,7 +1,7 @@
 var YAML = require('yamljs');
 
 var toplog = require('toplog');
-var logger = new toplog({concern: 'configuration', loglevel: 'VERBOSE'});
+var logger = new toplog({concern: 'configuration'});
 var currentConfig = null;
 
 module.exports.get = function(name, def) {
@@ -26,6 +26,7 @@ module.exports.get = function(name, def) {
 module.exports.reload = function() {
   try {
     _currentConfig = YAML.load('configs.yml');
+    logger.loglevel = module.exports.get('loglevels.config_manager', 'INFO');
   }
   catch (err) {
     logger.error('Error reloading configuration: ' + err);
