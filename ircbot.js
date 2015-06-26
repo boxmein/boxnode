@@ -675,7 +675,7 @@ if (app.config.get('autorejoin', false)) {
   app.ircevents.on('KICK', function onAutoRejoinKick(line) {
     setTimeout(function() {
       respond.RAW('JOIN ' + line.channel);
-    }, app.config.get('autorejoin_delay', 0.5));
+    }, app.config.get('autorejoin_delay', 0.5) * 1000);
   });
 }
 
