@@ -59,6 +59,23 @@ var app = {
   // configManager
 };
 
+//
+// Config API
+//
+
+var configManager, config;
+
+config = configManager = app.config = require('./config_manager.js');
+app.config.reload();
+
+app.util.config = {};
+app.util.config.get = app.config.get.bind(configManager);
+
+app.events.on('reloadconfig', function onReloadConfig() {
+  app.config.reload();
+});
+
+var logger = new toplog({concern: 'ircbot', loglevel: config.get('loglevels.irc')});
 
 //
 // Mega-error-handlers.
@@ -88,23 +105,6 @@ app.commandevents.on('error', function(err, module, line) {
 // IRC event error? :O
 app.ircevents.on('error', function() {
   logger.error('\x1b[31;1merror in app.ircevents: ' + arguments + '\x1b[0m');
-});
-
-
-//
-// Config API
-//
-
-var configManager, config;
-
-config = configManager = app.config = require('./config_manager.js');
-app.config.reload();
-
-app.util.config = {};
-app.util.config.get = app.config.get.bind(configManager);
-
-app.events.on('reloadconfig', function onReloadConfig() {
-  app.config.reload();
 });
 
 //
