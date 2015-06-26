@@ -99,6 +99,17 @@ exports.init = function(app, irc, command, u) {
       logger.verbose(evt+':', ircline.params[0], ircline.params[1]);
     }
 
+    // Channel topics
+    else if (evt == 'Topic') {
+      logger.verbose(util.format('\x1b[36;1mTopic for %s is: %s',
+          ircline.params[1], ircline.params[2]));
+    }
+
+    // Channel Topic Last Set By message
+    else if (evt == '333') {
+      logger.verbose('Topic last set on ' + ircline.params[3] + ' by ' + ircline.params[2]);
+    }
+
     // various pointless messages
     else if (ircEventParamLog.indexOf(evt) !== -1) {
       logger.verbose('*** ' + evt, ircline.params.join(' '));
