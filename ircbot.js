@@ -203,7 +203,7 @@ function isValidIRCLine(line) {
   * surrounded with ^ and $.
   */
 function matchesHostname(a, b) {
-  logger.verbose('matchesHostname called by', matchesHostname.caller.name);
+  // logger.verbose('matchesHostname called by', matchesHostname.caller.name);
 
   if (typeof a !== 'string') {
     throw new Error('invalid parameter #1, string expected, got ' + typeof a);
