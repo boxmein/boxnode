@@ -220,11 +220,9 @@ listeners['save-tptnet'] = function(evt, line, words, respond, util) {
 
     var dc = new Date(data.DateCreated * 1000);
     var dm = new Date(data.Date * 1000);
-    var endstr = nodeutil.format(saveString, data.ShortName, data.Username,
+    var endstr = nodeutil.format(saveString, util.superStrip(data.ShortName), data.Username,
       data.Score, data.ScoreUp, data.ScoreDown, data.Views, data.Comments,
       data.Version, shortNeatDate(dc), shortNeatDate(dm), data.ID);
-
-    endstr = util.superStrip(endstr);
 
     respond(endstr);
 
