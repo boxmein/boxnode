@@ -429,10 +429,20 @@ function unalias(aliased) {
     unaliased = app.aliases[unaliased];
   }
 
-  logger.verbose('Resolved alias ' + aliased + ' to ' + unaliased);
+  // logger.verbose('Resolved alias ' + aliased + ' to ' + unaliased);
   return unaliased;
 }
 
+// Emit a fake command event.
+// You gotta specify your own IRC line and respond() function.
+function fakeEmit(command, line, words, resp) {
+  words[0] = app.config.get('command_character', '\\') + command;
+  // remove leading asterisks to prevent running all commands
+  app.commandevents.emit(unalias(command).replace(/^\*+/g, ''),
+    line, words, resp, app.util);
+}
+
+app.util.fakeEmit = fakeEmit;
 
 
 // is this nickname an operator in that channel?
@@ -733,6 +743,10 @@ app.events.on('module.newbare', function onNewBareModule(module) {
     app.events.emit('module.error', module);
     return;
   }
+
+  if (app.modules[module.name]) {
+
+  } 
 
   module.type = module.type.toLowerCase();
   module.reload = module.reload || function() {};
