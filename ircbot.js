@@ -87,7 +87,7 @@ app.events.on('error', function() {
 
 
 // Unload a module if it throws up
-app.events.on('module.crash', function(err, module, line) {
+app.events.on('module.crash', function(line, err, module) {
   logger.error('\x1b[31;1merror in a module:', module.name, err, '\x1b[0m');
   logger.verbose(err.stack);
 
