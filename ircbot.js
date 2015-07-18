@@ -29,7 +29,9 @@ var app = {
   // state store for stuff like channel nick lists
   state: {
     // channel objects containing list of nicks
-    channels: {},
+    channels: {
+      // '##boxmein': { names: [ { nick: 'boxmein', voice: false, op: true } ] }
+    },
 
     // RPL_ISUPPORT things
     isupport: {},
@@ -47,6 +49,8 @@ var app = {
     // getNames
     // isOperatorIn
     // isVoiceIn
+    // isInChannel
+    // findInChannel
     // addAlias
     // config.get
     // getJSON
@@ -329,12 +333,13 @@ function superStrip(str) {
   return newstr;
 }
 
+// trim whitespace both left and right
 function trim(str) {
   return str.replace(/(^\s+|\s+$)/g, '');
 }
 
 
-/** Is this word a channel? */
+// Is this word a channel? 
 function isChannel(a) {
   return a.indexOf('#') === 0;
 }
