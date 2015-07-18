@@ -36,22 +36,30 @@ exports.getHelp = function() {
 exports.listener = function(line, words, respond, util) {
   var call = this.event.slice(9);
 
+  logger.verbose('checking if I am operators');
+
   // 1. *I* have to be ops
   util.isOperatorIn(util.config.get('nick', 'boxnode'), line.params[0]).done(function(y) {
+    logger.verbose('got response - ' + y);
     if (!y) {
+      logger.verbose('I am not of operators');
       if (util.config.get('loud', false))
         respond(util.config.get('modules.operator.not_an_op', 'I am not an op!'));
       return;
     }
 
+    logger.verbose('checking if the target is allowed to use op commands');
+
     // 2. the caller has to be permitted to do the thing
     var permitted = util.matchesHostname(util.config.get('owner'), line.hostmask);
+
+    if (permitted) logger.verbose('caller is owner, permitted');
 
     permitted = permitted || _.any(util.config.get('modules.operator.authorized'), function(ea) {
       return util.matchesHostname(ea, line.hostmask);
     });
 
-    logger.verbose('caller permitted: their hostname is allowed');
+    logger.verbose('caller permitted: their hostname is on the authorized list');
 
     var oppromise, voicepromise;
 
@@ -82,6 +90,7 @@ exports.listener = function(line, words, respond, util) {
 
 
     Q.all([voicepromise, oppromise]).then(function() {
+      logger.verbose('finished querying if the user is voice/op, now gonna perform?');
 
       if (!permitted) {
         if (util.config.get('modules.operator.loud'))
@@ -89,11 +98,7 @@ exports.listener = function(line, words, respond, util) {
         return;
       }
 
-      logger.debug('Performing op command: ' + call)
-
       // Actually do the shit they told us to
-
-      var command = call;
 
       words.shift();
 
@@ -101,12 +106,14 @@ exports.listener = function(line, words, respond, util) {
 
       if (!util.isChannel(channel)) {
         target = channel;
-        channel = util.params[0];
+        channel = line.params[0];
       }
+
+      logger.info(line.hostmask, 'is doing', call, target);
 
       target = target || words.shift() || line.hostmask;
 
-      switch (command) {
+      switch (call) {
         case 'op':
           respond.MODE(channel, '+o', target);
           break;
@@ -122,15 +129,66 @@ exports.listener = function(line, words, respond, util) {
         case 'devoice':
           respond.MODE(channel, '-v', target);
           break;
+
+        case 'ban':
+          respond.MODE(channel, '+b', target);
+          break;
+
+        case 'unban':
+          respond.MODE(channel, '-b', target);
+          break;
+
+        case 'quiet':
+          respond.MODE(channel, '+q', target);
+          break;
+
+        case 'unquiet':
+          respond.MODE(channel, '-q', target);
+          break;
+
+        case 'mode':
+          respond.MODE(channel, target, words.shift() || '');
+          break;
+
+        case 'kick':
+          respond.RAW('KICK ' + channel + ' :' + target);
+          break;
+
+        case 'invite':
+          respond.RAW('INVITE ' + channel + ' :'+ target);
+          break;
+
+        case 'topic':
+          respond.RAW('TOPIC ' + channel + ' :' + target + ' ' + words.join(' '));
+          break;
+
+        default:
+          logger.verbose('did not find this subcommand - try `list operator!`');
+          break;
       }
     });
 
   });
 };
 
-exports.init = function(u, alias) {
-  alias('op', 'operator.op');
+exports.init = function(u) {
+  u.addAlias('op', 'operator.op');
+  u.addAlias('deop', 'operator.deop');
+
+  u.addAlias('ban', 'operator.ban');
+  u.addAlias('unban', 'operator.unban');
+
+  u.addAlias('voice', 'operator.voice');
+  u.addAlias('devoice', 'operator.devoice');
+
+  u.addAlias('quiet', 'operator.quiet');
+  u.addAlias('unquiet', 'operator.unquiet');
+
+  u.addAlias('kick', 'operator.kick');
+  u.addAlias('invite', 'operator.invite');
+  u.addAlias('topic', 'operator.topic');
+
   util = u;
 
-  logger.currprops.loglevel = util.config.get('loglevels.operator', 'VERBOSE');
+  logger.properties.loglevel = util.config.get('loglevels.operator', 'VERBOSE');
 };
