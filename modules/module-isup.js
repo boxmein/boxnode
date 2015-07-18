@@ -46,3 +46,7 @@ exports.listener = function(line, words, respond, util) {
     }
   });
 };
+
+exports.init = function(util, addAlias) {
+  addAlias('justme', 'isup');
+};
