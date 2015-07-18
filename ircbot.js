@@ -345,6 +345,15 @@ function isChannel(a) {
 }
 
 
+// Represents a user from a channel listing
+function UserObj(name, host) {
+  this.op = name[0] === app.state.OP_CHAR;
+  this.voice = name[0] === app.state.VOICE_CHAR;
+  this.nick = (this.op || this.voice) ? name.slice(1) : name;
+  this.host = host;
+}
+
+
 /** List all names in a channel.
   * Pass a true for the second parameter to force reloading the names list.
   * Returns a promise!
@@ -368,7 +377,8 @@ function getNames(channel, force_update) {
   // set up handlers
   function namReply(data) {
     // console.log('NamReply', arguments);
-    names.push(data.params[3].split(' '));
+    names.push(data.params[3].split(' ')
+                             .map(function(ea) { return new UserObj(ea); }));
   }
 
   app.ircevents.on('NamReply', namReply);
@@ -436,7 +446,7 @@ respond.RAW = function(data) {
   writeToSocket(data.replace(/[\r\n]/g, '').slice(0, 511));
 };
 
-app.util.respond = respond;
+
 
 // Alias system
 
@@ -645,11 +655,14 @@ app.ircevents.on('JOIN', function onJoin(line) {
   channels[channel] = channels[channel] || {};
   channels[channel].names = channels[channel].names || [];
 
-  if (channels[channel].names.indexOf(line.nick) !== -1) {
-    logger.warning(line.nick, 'is already in this channel!');
-  }
-
-  channels[channel].names.push(line.nick);
+  findInChannel(line.nick, channel).then(function(user) {
+    if (user) {
+      logger.warning(line.nick, 'is already in this channel!');
+    } else {
+      channels[channel].names.push(new UserObj(line.nick));
+      channels[channel].names = _.uniq(channels[channel].names);
+    }
+  });
 });
 
 
@@ -663,14 +676,14 @@ app.ircevents.on('PART', function onPart(line) {
     return;
 
   var i = -1;
-  if (channels[channel] &&
-      channels[channel].names &&
-      (i = channels[channel].names.indexOf(line.nick)) !== -1) {
-    channels[channel].names.splice(i, 1);
-    return;
-  } else {
-    // lol wtf
-    logger.warning('wtf??? someone left a channel they weren\'t in');
+  findInChannel(line.nick, channel).then(function(user) {
+    if (user) {
+      channels[channel].names.splice(channels[channel].names.indexOf(user));
+    } else {
+      logger.warning(line.nick, 'left a channel they were not in');
+    }
+  });
+});
   }
 });
 
