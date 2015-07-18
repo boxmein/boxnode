@@ -403,14 +403,66 @@ function getNames(channel, force_update) {
   return def.promise;
 }
 
-app.util.parseIRCLine = parseIRCLine;
-app.util.matchesHostname = matchesHostname;
-app.util.getNames = getNames;
-app.util.isChannel = isChannel;
-app.util.getJSON = getJSON;
-app.util.padLeft = padLeft;
-app.util.superStrip = superStrip;
-app.util.trim = trim;
+
+
+// Emit a fake command event.
+// You gotta specify your own IRC line and respond() function.
+function fakeEmit(command, line, words, resp) {
+  words[0] = app.config.get('command_character', '\\') + command;
+  // remove leading asterisks to prevent running all commands
+  app.commandevents.emit(unalias(command).replace(/^\*+/g, ''),
+    line, words, resp, app.util);
+}
+
+
+
+
+
+// is this nickname an operator in that channel?
+// returns a promise!
+function isOperatorIn(nick, channel) {
+  return getNames(channel).then(function(names) {
+    return !!_.any(names, function(each) {
+      return each.nick == nick && each.op;
+    });
+  });
+}
+
+
+
+// is this nickname voiced in that channel?
+// returns a promise!
+function isVoiceIn(nick, channel) {
+  return getNames(channel).then(function(names) {
+    return !!_.any(names, function(each) {
+       return each.nick == nick && each.voice;
+    });
+  });
+}
+
+
+
+// is this nickname in a channel?
+// returns a promise!
+function isInChannel(nick, channel) {
+  return getNames(channel).then(function(names) {
+    return !!_.any(names, function(each) {
+      return each.nick == nick;
+    });
+  });
+}
+
+
+
+// find an user in a channel
+// returns a promise!
+function findInChannel(nick, channel) {
+  return getNames(channel).then(function(names) {
+    return names.filter(function(ea) {
+      return ea.nick == nick;
+    })[0]; 
+  });
+}
 
 
 // respond function.
@@ -456,7 +508,6 @@ function addAlias(from, to) {
   app.aliases[from] = to;
 }
 
-app.util.addAlias = addAlias;
 
 function deleteAlias(from) {
   logger.debug('Removed alias: ' + from);
@@ -478,42 +529,23 @@ function unalias(aliased) {
   return unaliased;
 }
 
-// Emit a fake command event.
-// You gotta specify your own IRC line and respond() function.
-function fakeEmit(command, line, words, resp) {
-  words[0] = app.config.get('command_character', '\\') + command;
-  // remove leading asterisks to prevent running all commands
-  app.commandevents.emit(unalias(command).replace(/^\*+/g, ''),
-    line, words, resp, app.util);
-}
 
-app.util.fakeEmit = fakeEmit;
-
-
-// is this nickname an operator in that channel?
-// returns a promise!
-function isOperatorIn(nick, channel) {
-  return getNames(channel).then(function(names) {
-    return !!_.any(names, function(each) {
-      return each.indexOf(nick) === 1 &&
-             each[0] == app.state.OP_CHAR;
-    });
-  });
-}
-
-// is this nickname voiced in that channel?
-// returns a promise!
-function isVoiceIn(nick, channel) {
-  return getNames(channel).then(function(names) {
-    return !!_.any(names, function(each) {
-       return each.indexOf(nick) === 1 &&
-              each[0] == app.state.VOICE_CHAR;
-    });
-  });
-}
-
+app.util.respond = respond;
+app.util.parseIRCLine = parseIRCLine;
+app.util.matchesHostname = matchesHostname;
+app.util.getNames = getNames;
+app.util.isChannel = isChannel;
+app.util.getJSON = getJSON;
+app.util.padLeft = padLeft;
+app.util.superStrip = superStrip;
+app.util.trim = trim;
 app.util.isOperatorIn = isOperatorIn;
 app.util.isVoiceIn = isVoiceIn;
+app.util.isInChannel = isInChannel;
+app.util.findInChannel = findInChannel;
+app.util.addAlias = addAlias;
+app.util.fakeEmit = fakeEmit;
+
 
 //
 // Event handlers
@@ -527,6 +559,9 @@ app.events.on('sock.connect', function onSockConnect() {
 
   if (app.config.get('server_password'))
     writeToSocket('PASS ' + app.config.get('server_password'));
+
+  if (app.config.get('auth', false) && app.config.get('auth.type', undefined) == 'SASL')
+    writeToSocket('CAP LS');
 
   writeToSocket('NICK ' + app.config.get('nick', 'boxnode'));
   writeToSocket('USER ' + app.config.get('username', 'boxnode') + ' * * :' +
@@ -564,6 +599,12 @@ app.events.on('sock.data', function onSockData(chunk) {
       app.ircevents.emit(ea.command, ea);
     });
 });
+
+
+
+//
+// IRC Events
+//
 
 
 
@@ -642,14 +683,17 @@ app.ircevents.on('ISupport', function onISupport(line) {
 
 
 app.ircevents.on('JOIN', function onJoin(line) {
+
+  // just list and cache all names in a channel when I join
+  if (line.nick == app.config.get('nick')) {
+    getNames(line.channel, true);
+    return;
+  }
+
   var channel = line.params[0]
     , channels = app.state.channels;
 
   if (!channel || channel == '')
-    return;
-
-  // ignore own joins
-  if (line.nick == app.config.get('nick'))
     return;
 
   channels[channel] = channels[channel] || {};
@@ -684,6 +728,31 @@ app.ircevents.on('PART', function onPart(line) {
     }
   });
 });
+
+
+app.ircevents.on('MODE', function onModeChange(line) {
+  var channel = line.channel;
+  var mode = line.params[1];
+
+  // modes we care about, set on users
+  if ("ov".indexOf(mode[1]) !== -1) {
+    var target = line.params[2];
+
+    if (!target) 
+      return logger.warning('weird b/e/h/o/v mode without target');
+
+    // update the voiced-ness of an user
+    findInChannel(target, line.channel).then(function(user) {
+      if (mode[1] === 'o') {
+        user.op = mode[0] === '+';
+      } else if (mode[1] == 'v') {
+        user.voice = mode[0] === '+';
+      }
+
+      var ascn = app.state.channels[channel].names;
+
+      ascn[ascn.indexOf(user)] = user;
+    });
   }
 });
 
@@ -694,7 +763,7 @@ app.ircevents.on('PART', function onPart(line) {
 app.events.on('ready', function onJoinReady(line) {
   logger.verbose('ready to join channels!');
   // we're connected to the server! let's try and join some channels!
-  writeToSocket('JOIN ' + app.config.get('channels').map(function(ea) {
+  respond.RAW('JOIN ' + app.config.get('channels').map(function(ea) {
     return ea.name;
   }).join(','));
 });
