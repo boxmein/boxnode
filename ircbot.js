@@ -10,6 +10,9 @@ var net     = require('net')
   , CONSTS  = require('./constants.json')
   , _CONSTS = _.invert(CONSTS);
 
+
+
+
 var app = {
   // generic system-level events
   events: new Emitter({ wildcard: true }),
@@ -57,9 +60,17 @@ var app = {
   // configManager
 };
 
+
+
+
+
 //
 // Config API
 //
+
+
+
+
 
 var configManager, config;
 
@@ -75,9 +86,17 @@ app.events.on('reloadconfig', function onReloadConfig() {
 
 var logger = new toplog({concern: 'ircbot', loglevel: config.get('loglevels.irc')});
 
+
+
+
+
 //
 // Mega-error-handlers.
 //
+
+
+
+
 
 logger.verbose('Setting up error handlers...');
 
@@ -105,9 +124,14 @@ app.ircevents.on('error', function() {
   logger.error('\x1b[31;1merror in app.ircevents: ' + arguments + '\x1b[0m');
 });
 
+
+
+
 //
 // Some useful functions
 //
+
+
 
 
 /** Parse a line of IRC into an object.
@@ -288,6 +312,7 @@ function padLeft(str, len) {
   return (zeros + str).slice(-len);
 }
 
+
 // Remove all non-printable ASCII characters from the input.
 function superStrip(str) {
   var newstr = '';
@@ -319,6 +344,7 @@ function isChannel(a) {
   * Pass a true for the second parameter to force reloading the names list.
   * Returns a promise!
   */
+
 function getNames(channel, force_update) {
 
   var def = Q.defer();
@@ -374,6 +400,8 @@ app.util.trim = trim;
 
 // respond function.
 
+
+
 /** Respond to a message in <channel> to <nick>, with <data>. */
 function respond(channel, nick, data) {
   if (channel == app.config.get('nick'))
@@ -407,6 +435,7 @@ app.util.respond = respond;
 
 // Alias system
 
+
 function addAlias(from, to) {
   logger.debug('Added alias: ' + from + ' -> ' + to);
   app.aliases[from] = to;
@@ -418,6 +447,7 @@ function deleteAlias(from) {
   logger.debug('Removed alias: ' + from);
   delete app.aliases[from];
 }
+
 
 // Remove any alias from a command name
 function unalias(aliased) {
@@ -562,13 +592,6 @@ app.ircevents.on('PRIVMSG', function onPrivmsg(line) {
     }
   }
 });
-
-
-
-//
-// IRC Events
-//
-
 
 
 app.ircevents.on('Welcome',
@@ -1152,6 +1175,8 @@ logger.verbose('attaching event handlers');
 sock.on('error', app.events.emit.bind(app.events, 'sock.error'));
 sock.on('data', app.events.emit.bind(app.events, 'sock.data'));
 sock.on('end', app.events.emit.bind(app.events, 'sock.end'));
+
+
 
 logger.verbose('done initializing!');
 
