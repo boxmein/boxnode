@@ -31,14 +31,12 @@ these files are a good starting point for future modules.
 
 ## Todo
 
-[ ] More modules (TPTnet, Google/search, xkcd)
 [ ] Extra secrets
 [ ] Command interpolation (eg `\hug {mangler.rot13 {mangler.rot13 boxmein}}`)
 [ ] Global permissions
 [ ] Reloadable 'event'-type modules
 [ ] TPT module: user- and moderator-level tools to do stuff :D
 [ ] Segregating the huge "ircbot.js" file (do I need this?)
-[ ] Pretty up the code for Github (maybe)
 
 ## Credit
 
