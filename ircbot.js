@@ -717,6 +717,67 @@ if (app.config.get('auth', false) && app.config.get('auth').type == 'NickServ') 
   });
 }
 
+if (app.config.get('auth', false) && app.config.get('auth').type == 'SASL') {
+  logger.info('SASL authentication is set up, setting up cap listeners');
+  app.ircevents.on('CAP', function onCapability(line) {
+
+    // CAP LS response
+    if (line.params[1] == 'LS') {
+      logger.verbose('capability list:', line.params[2]);
+      var capabilitiesWeKnow = line.params[2].toLowerCase().split(' ');
+
+      if (capabilitiesWeKnow.indexOf('sasl') !== -1) {
+        logger.verbose('server supports SASL, let\'s ask for it');
+        respond.RAW('CAP REQ :sasl');
+      } else {
+        logger.verbose('server does not support SASL!');
+      }
+    } 
+
+    // CAP ACK response
+    else if (line.params[1] == 'ACK') {
+    
+      if (line.params[2].toLowerCase().indexOf('sasl') !== -1) {
+    
+        logger.verbose('server acknowledged SASL! we can begin our auth');
+        respond.RAW('AUTHENTICATE PLAIN');
+
+        // we can auth when we get an AUTHENTICATE reply
+        app.ircevents.once('AUTHENTICATE', function onAuthRequest(line) {
+          var authstr = '';
+          var username = app.config.get('auth.name', app.config.get('nick', 'boxnode'));
+          var password = app.config.get('auth.password', '');
+          authstr = username + '\0' + username + '\0' + password;
+          respond.RAW('AUTHENTICATE ' + new Buffer(authstr).toString('base64'));  
+        });
+
+        // 903 == SASL auth success
+        app.ircevents.once('903', function() {
+          respond.RAW('CAP END');
+          logger.info('SASL login successful!');
+        });
+
+        // 904, 905 == SASL auth failure
+        function saslFailure(line) {
+          logger.error('SASL authentication failure!');
+          
+          respond.RAW('CAP END');
+
+          if (app.config.get('auth.crashOnFail', false)) {
+            app.events.emit('quit.graceful', 'SASL authentication failed');
+          }
+        }
+
+        app.ircevents.once('904', saslFailure);
+        app.ircevents.once('905', saslFailure);
+
+      } else {
+        logger.verbose('server did not acknowledge SASL :\\');
+      }
+    }
+  });
+}
+
 //
 // Module system
 //
