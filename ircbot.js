@@ -694,7 +694,12 @@ function cushionListener(module) {
 
 // New module added (only when you add via require())
 app.events.on('module.new', function onNewModule(name) {
-  logger.info('new module: ' + name);
+  logger.info('trying new module: ' + name);
+
+  if (app.modules[name]) {
+    logger.error('module `'+name+'` exists, not loading');
+    return;
+  }
 
   try {
     var module = require('./modules/module-' + name + '.js');
