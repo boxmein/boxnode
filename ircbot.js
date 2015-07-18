@@ -938,7 +938,7 @@ app.events.on('module.newbare', function onNewBareModule(module) {
       try {
         var ret = module.init(app.util, addAlias);
       } catch (err) {
-        app.events.emit('module.errorinit', module);
+        app.events.emit('module.errorinit', module, err);
       }
       // can do something here with the init return value...
     }
