@@ -36,38 +36,50 @@ exports.getHelp = function() {
 exports.listener = function(line, words, respond, util) {
   var call = this.event.slice(9);
 
-  logger.verbose('checking if I am operators');
+  logger.verbose('checking if I am operators in the target channel');
+
+  var channel = words[1] ? (util.isChannel(words[1]) ? words[1] : line.channel) : line.channel;
 
   // 1. *I* have to be ops
-  util.isOperatorIn(util.config.get('nick', 'boxnode'), line.params[0]).done(function(y) {
-    logger.verbose('got response - ' + y);
-    if (!y) {
+  util.isOperatorIn(util.config.get('nick', 'boxnode'), channel).done(function(amOperator) {
+
+    if (!amOperator) {
+
       logger.verbose('I am not of operators');
-      if (util.config.get('loud', false))
+
+      if (util.config.get('modules.operator.loud', false))
         respond(util.config.get('modules.operator.not_an_op', 'I am not an op!'));
+
       return;
     }
 
     logger.verbose('checking if the target is allowed to use op commands');
 
     // 2. the caller has to be permitted to do the thing
-    var permitted = util.matchesHostname(util.config.get('owner'), line.hostmask);
+    var isOwner = util.matchesHostname(util.config.get('owner'), line.hostmask);
 
-    if (permitted) logger.verbose('caller is owner, permitted');
+    if (isOwner) {
+      logger.verbose('caller is owner, permitted');
+    }
 
-    permitted = permitted || _.any(util.config.get('modules.operator.authorized'), function(ea) {
+    var isWhitelisted = _.any(
+        util.config.get('modules.operator.authorized'), function(ea) {
       return util.matchesHostname(ea, line.hostmask);
     });
 
-    logger.verbose('caller permitted: their hostname is on the authorized list');
+    if (isWhitelisted)
+      logger.verbose('caller is whitelisted, permitted');
 
-    var oppromise, voicepromise;
 
-    if (util.config.get('modules.operator.ops_allowed', false)) {
-      var oppromise = util.isOperatorIn(line.nick, line.params[0])
-                          .then(function(y) {
-        permitted = permitted || y;
-        logger.verbose('caller permitted: ops_allowed && they\'re an op');
+
+    var isChanop = false;
+    var chanopsAllowed = util.config.get('modules.operator.ops_allowed', false);
+    var oppromise;
+
+    if (chanopsAllowed) {
+      var oppromise = util.isOperatorIn(line.nick, channel)
+                          .then(function(result) {
+        isChanop = result;
       });
     } else {
       oppromise = Q.defer();
@@ -75,12 +87,18 @@ exports.listener = function(line, words, respond, util) {
       oppromise = oppromise.promise;
     }
 
+    if (isChanop)
+      logger.verbose('caller is chanop in the channel, permitted');
 
-    if (util.config.get('modules.operator.voices_allowed', false)) {
-      var voicepromise = util.isVoiceIn(line.nick, line.params[0])
-                             .then(function(y) {
-        permitted = permitted || y;
-        logger.verbose('caller permitted: voices_allowed && they\'re a voice');
+
+    var isVoiced = false;
+    var voicesAllowed = util.config.get('modules.operator.voices_allowed', false);
+    var voicepromise;
+
+    if (voicesAllowed) {
+      var voicepromise = util.isVoiceIn(line.nick, channel)
+                             .then(function(result) {
+        isVoiced = result;
       });
     } else {
       voicepromise = Q.defer();
@@ -90,7 +108,9 @@ exports.listener = function(line, words, respond, util) {
 
 
     Q.all([voicepromise, oppromise]).then(function() {
-      logger.verbose('finished querying if the user is voice/op, now gonna perform?');
+
+      var permitted = isOwner || isWhitelisted || (chanopsAllowed && isChanop) 
+                      || (voicesAllowed && isVoiced);
 
       if (!permitted) {
         if (util.config.get('modules.operator.loud'))
@@ -163,7 +183,7 @@ exports.listener = function(line, words, respond, util) {
           break;
 
         default:
-          logger.verbose('did not find this subcommand - try `list operator!`');
+          respond('did not find this subcommand - try `list operator!`');
           break;
       }
     });
