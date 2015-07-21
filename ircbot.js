@@ -1065,7 +1065,18 @@ app.commandevents.on('help', function onCmdHelp(line, words, respond) {
 
   if (words.length < 2 ||
       words[1] == 'help') {
-    return respond('`help <command>` - get help on a specific command (you\'re doing it right now! :D)');
+    return respond('`help <command>` - get help on a specific command - you\'re doing it right now! :D (also, try `help basics`!)');
+  }
+
+  // Hard-wire some basics into the code
+
+  if (words[1] == 'basics') {
+    var resp = [ 'i am a very module-oriented bot, which means that all commands are grouped under modules. commands in said modules can be run with `module.command <arguments...>`, for example `test.potato` or `operator.deop` or `system.reloadconfig`.',
+      'when you list the commands of a specific module with `list <module>`, you it will list all commands *under* that module. if you were to do `list system`, then the list item "eval" means that `system.eval" is a command you can run!',
+      'however, when a command you see lists a sub-command with an asterisk (*), then this means there\'s also a command that runs if you call `module`.',
+      'oh by the way if I write `asdf` I mean you should actually send ' + app.config.get('command_character', '\\') + 'asdf to the channel.',
+      'that is everything! go try out `list` and `test.potato` if the module is loaded :O'];
+    resp.map(respond);
   }
 
 
