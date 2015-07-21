@@ -41,8 +41,8 @@ exports.listener = function(line, words, respond, util) {
       respond('invalid address!');
     } else if (err.errno == 'ECONNREFUSED') {
       respond('It\'s down (connection refused)!');
-    } else {
-      respond('error handling request! :(((');
+    } else if (err.errno !== 'ETIMEDOUT') {
+      respond('error handling request! :((( ('+err.errno+')');
     }
   });
 };
