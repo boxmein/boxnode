@@ -1137,7 +1137,7 @@ app.events.emit('module.newbare', {
   name: 'system',
 
   listAll: function() {
-    return ['quit', 'join', 'part', 'nick', 'raw', 'eval'];
+    return Object.keys(this.getHelp());
   },
 
   getHelp: function() {
