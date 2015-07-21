@@ -578,6 +578,7 @@ app.util.isInChannel = isInChannel;
 app.util.findInChannel = findInChannel;
 app.util.addAlias = addAlias;
 app.util.fakeEmit = fakeEmit;
+app.util.stagger = stagger;
 
 
 //
