@@ -464,6 +464,41 @@ function findInChannel(nick, channel) {
   });
 }
 
+// Stagger function calls over a time
+function stagger(func, delay, thisObj) {
+  // queue of function arguments
+  var queue = [];
+  var performing = false;
+
+  function startPerforming() {
+    if (performing) return;
+    performing = true;
+
+    setTimeout(callFunc, delay);
+  }
+
+  function callFunc() {
+    var a = queue.shift();
+
+    if (a) {
+      func.apply(thisObj, a);
+      if (queue.length > 0) {
+        setTimeout(callFunc, delay);
+      } else {
+        performing = false;
+      }
+    }
+  }
+
+  return function() {
+    queue.push(arguments);
+
+    if (!performing) {
+      startPerforming();
+    }
+  };
+}
+
 
 // respond function.
 
@@ -494,11 +529,9 @@ respond.MODE = function(channel, mode, target) {
 };
 
 // Raw IRC for anything else.
-respond.RAW = function(data) {
+respond.RAW = stagger(function(data) {
   writeToSocket(data.replace(/[\r\n]/g, '').slice(0, 511));
-};
-
-
+}, 200, respond);
 
 // Alias system
 
