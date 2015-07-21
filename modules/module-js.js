@@ -9,7 +9,7 @@ exports.listAll = function() {
 
 exports.getHelp = function() {
   return {
-    '*': '`js <code...>` - runs Javascript in a closure. (function() { return <code>; })()'
+    '*': '`js <code...>` - runs Javascript in a closure.'
   };
 };
 
