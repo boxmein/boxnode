@@ -916,7 +916,7 @@ app.events.emit('module.newbare', {
   name: 'system',
 
   listAll: function() {
-    return ['quit', 'join', 'part', 'nick', 'raw', 'eval'];
+    return ['quit', 'join', 'part', 'nick', 'raw', 'eval', 'ccache', 'reloadconfig', 'lsmod'];
   },
 
   getHelp: function() {
