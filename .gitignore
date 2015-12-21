@@ -5,3 +5,6 @@ bug.log
 
 # Sublime crud
 *.sublime-workspace
+
+# Node crud
+node_modules
