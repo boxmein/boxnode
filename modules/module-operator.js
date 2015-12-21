@@ -1,4 +1,4 @@
-// Channel op module
+2// Channel op module
 var Q = require('q');
 var _ = require('underscore');
 
@@ -132,5 +132,5 @@ exports.init = function(u, alias) {
   alias('op', 'operator.op');
   util = u;
 
-  logger.currprops.loglevel = util.config.get('loglevels.operator', 'VERBOSE');
+  // logger.currprops.loglevel = util.config.get('loglevels.operator', 'VERBOSE');
 };
