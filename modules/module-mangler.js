@@ -42,6 +42,7 @@ exports.getHelp = function() {
     'hash': '`mangler.hash <type> <text...>` - digest the given text using a hash algorithm (openssl)',
     'encipher': '`mangler.encipher <type> <password> <text...>` - encipher the given text',
     'decipher': '`mangler.decipher <type> <password> <hex digest...>` - decipher the given hex digest',
+    'tglyc': '`mangler.tglyc <text...>` - turn some text into typoglycemic nonsense (https://en.wikipedia.org/wiki/Typoglycemia)'
   };
 };
 
@@ -114,7 +115,19 @@ manglers.k3wlt0k = function(text) {
              .replace(/3r/g, 'ur')
              .toUpperCase();
   return text;
-}
+};
+
+manglers.tglyc = function(text) {
+  return text.split(' ').map(function(each) {
+    var ls = each.split('');
+    var first = ls.shift();
+    var last = ls.pop();
+
+    if (first && last && ls.length > 0)
+      return first + _.shuffle(ls).join('') + last;
+    return '';
+  }).join(' ');
+};
 
 
 
