@@ -745,7 +745,8 @@ app.events.on('module.newbare', function onNewBareModule(module) {
   }
 
   if (app.modules[module.name]) {
-
+    logger.warning('module ' + module.name + ' already exists!');
+    return;
   } 
 
   module.type = module.type.toLowerCase();
@@ -1069,29 +1070,6 @@ app.events.emit('module.newbare',
 
 app.events.emit('module.newbare',
   require('./module_manager')(app));
-
-
-
-// Announce its own character if my name and some specific words are mentioned
-if (app.config.get('announce_character', true)) {
-  var msg = app.config.get('announce_character_message') || 'just use %char';
-  app.ircevents.on('PRIVMSG', function onAnnouncePrivmsg(line) {
-    var chan = line.params[0];
-    var user = line.nick;
-    var text = line.params[1].toLowerCase();
-
-    if (text.indexOf(app.config.get('nick', 'boxnode')) !== -1) {
-      if (text.indexOf('control') !== -1 ||
-          // text.indexOf('command') !== -1 ||
-          text.indexOf('character') !== -1 ||
-          text.indexOf('prefix') !== -1) {
-        respond(chan, user, msg.replace('%char', app.config.get('command_character')));
-      }
-    }
-  });
-}
-
-
 
 //
 // Entry point

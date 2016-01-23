@@ -199,3 +199,10 @@ modules:
         lin32: "http://thepowdertoy.net/Downloads/powder-linux32.zip"
         lin64: "http://thepowdertoy.net/Downloads/powder-linux64.zip"
         mac: "http://thepowdertoy.net/Downloads/powder-mac.zip"
+
+  commandchar:
+    message: "all commands for me start with the %char character. try out %charlist and %charhelp!"
+    match_words:
+      - control
+      - character
+      - prefix
