@@ -8,3 +8,6 @@ bug.log
 
 # Node crud
 node_modules
+
+# Sqlite database
+*.db
