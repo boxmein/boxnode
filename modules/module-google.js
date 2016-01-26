@@ -64,7 +64,9 @@ var DEPRECATED = 'This uses an old weird Google search API that\'s '+
 
 exports.init = function(util, addAlias) {
   addAlias('gg', 'google');
-  logger = new require('toplog')({concern: 'google',
-    loglevel: util.config.get('loglevels.google', 'INFO')});
+  logger = new require('toplog')({
+    concern: 'google',
+    loglevel: util.config.get('modules.google.loglevel', util.config.get('loglevel', 'INFO'))
+  });
   logger.warning(DEPRECATED);
 };

@@ -2,8 +2,10 @@ exports.type = 'event';
 
 exports.init = function(app, irc, command, util) {
 
-  var logger = new require('toplog')({concern: 'invitefollow',
-    loglevel: util.config.get('loglevels.invitefollow', 'INFO')});
+  var logger =  new require('toplog')({
+    concern: 'invitefollow',
+    loglevel: util.config.get('modules.invitefollow.loglevel', util.config.get('loglevel', 'INFO'))
+  });
 
   logger.info('autorejoin enabled!');
 

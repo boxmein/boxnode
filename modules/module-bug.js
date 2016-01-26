@@ -1,5 +1,6 @@
 exports.type = 'command';
 var fs = require('fs');
+var logger;
 var lastUsed = {};
 var logFile = null;
 
@@ -33,7 +34,7 @@ exports.listener = function(line, words, respond) {
     respond('put something in the description! see `help bug`');
 
   var endstr = '' + Date.now() + ': ' + line.hostmask + ' - ' + words.join(' ').slice(0, 140);
-  console.log('\x1b[35;1m' + endstr + '\x1b[0m');
+  logger.info('\x1b[35;1m' + endstr + '\x1b[0m');
 
   fs.write(logFile, endstr + '\r\n', null, 'utf8', function() {
     respond('bug report successful!');
@@ -41,6 +42,10 @@ exports.listener = function(line, words, respond) {
 };
 
 exports.init = function(u, alias) {
+  logger = new require('toplog')({
+    concern: 'bug',
+    loglevel: u.config.get('modules.bug.loglevel', u.config.get('loglevel', 'INFO'))
+  });
   logFile = fs.openSync('bug.log', 'a');
   fs.write(logFile, 'started logging at ' + Date.now() + '\n', 'utf8');
 };

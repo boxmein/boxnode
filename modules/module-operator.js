@@ -2,7 +2,7 @@
 var Q = require('q');
 var _ = require('underscore');
 
-var logger = new require('toplog')({concern: 'operator'});
+var logger;
 
 exports.type = 'command';
 
@@ -132,5 +132,8 @@ exports.init = function(u, alias) {
   alias('op', 'operator.op');
   util = u;
 
-  // logger.currprops.loglevel = util.config.get('loglevels.operator', 'VERBOSE');
+  logger = new require('toplog')({
+    concern: 'operator',
+    loglevel: util.config.get('modules.operator.loglevel', util.config.get('loglevel', 'INFO'))
+  });
 };

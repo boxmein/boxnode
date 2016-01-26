@@ -30,5 +30,8 @@ exports.listener = function(line, words, respond, util) {
 };
 
 exports.init = function(util) {
-  logger = new require('toplog')({concern: 'js', loglevel: util.config.get('loglevels.js', 'INFO')});
+  logger = new require('toplog')({
+    concern: 'convert',
+    loglevel: u.config.get('modules.convert.loglevel', u.config.get('loglevel', 'INFO'))
+  });
 }

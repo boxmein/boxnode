@@ -7,14 +7,12 @@ var nodeutil = require('util');
 /* Gotta love underscore */
 var _ = require('underscore');
 
-/* This is a logger I wrote with log levels and all sorts of bullcrap. Really
-  useful, so using this gets you timestamps, log levels and filtering for free!
-  Plus the logs look really neat with timestamps lining the left edge.
-
-  Also, the "concern" property lets every logger instance name what they're
-  logging for.
+/* 
+  This is a cool logger thing called 'toplog' that I use everywhere in this bot.
+  It's defined in the init function because we need some configuration to do it.
 */
-var logger = new require('toplog')({concern: 'test', loglevel: 'INFO'});
+var logger;
+
 
 
 /*
@@ -207,6 +205,20 @@ exports.listener = function(line, words, respond, util) {
   function passed right into the scope. It's also available in the util object.
 */
 exports.init = function(util, addAlias) {
+
+  // Here we setup the logger. We name the logger something we want, this is 
+  // prefixed to all log messages by this logger. The log levels can let you 
+  // filter out log types, and here's the types supported by default:
+  // 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'
+  // Just call the lowercase version on the logger object to send that log. All
+  // the functions are variadic and will concat arguments with a space.
+  // ie, logger.verbose("hello", "world", 5, {}) is valid!
+  
+  logger = new require('toplog')({
+    concern: 'test',
+    loglevel: util.config.get('modules.test.loglevel', util.config.get('loglevel', 'INFO'));
+  });
+
   logger.verbose('init#util:', nodeutil.inspect(util));
   logger.verbose('init#addAlias:', nodeutil.inspect(addAlias));
 

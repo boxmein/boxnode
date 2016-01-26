@@ -1,4 +1,4 @@
-var logger = new require('toplog')({concern: 'cron', loglevel: 'VERBOSE'});
+var logger;
 exports.type = 'command';
 
 var nodeutil = require('util');
@@ -221,7 +221,10 @@ scheduler.tick = function() {
   scheduler._lastTick = now_time;
 };
 
-exports.init = function(u, addAlias) {
-  logger.verbose('storing util for later');
+exports.init = function(u) {
+  logger = new require('toplog')({
+    concern: 'cron',
+    loglevel: u.config.get('modules.cron.loglevel', u.config.get('loglevel', 'INFO'));
+  });
   util = u;
 };

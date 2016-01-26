@@ -1,8 +1,7 @@
 exports.type = 'command';
 var _ = require('underscore');
 
-var logger = new require('toplog')({concern: 'rpn'});
-
+var logger;
 var stack = [];
 var storage = {};
 var stack_max = 100;
@@ -87,7 +86,12 @@ exports.listener = function(line, words, respond, util) {
 
 exports.init = function(u, alias) {
   util = u;
-  logger.currprops.loglevel = util.config.get('loglevels.rpn', 'VERBOSE');
+  
+  logger = new require('toplog')({
+    concern: 'google',
+    loglevel: util.config.get('modules.google.loglevel', util.config.get('loglevel', 'INFO'));
+  });
+
   try {
 
     // count takes-gives stuff

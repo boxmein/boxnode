@@ -73,7 +73,10 @@ app.events.on('reloadconfig', function onReloadConfig() {
   app.config.reload();
 });
 
-var logger = new toplog({concern: 'ircbot', loglevel: config.get('loglevels.irc')});
+var logger = new require('toplog')({
+  concern: 'core',
+  loglevel: config.get('loglevel', 'INFO')
+});
 
 //
 // Mega-error-handlers.

@@ -2,7 +2,7 @@
 exports.type = 'command';
 
 var Q = require('q');
-var logger = new require('toplog')({concern: 'tpt', loglevel: 'VERBOSE'});
+var logger;
 var tinystore = require('tinystore');
 
 var http = require('http');
@@ -47,6 +47,11 @@ exports.listener = function(line, words, respond, util) {
 
 
 exports.init = function(u, alias) {
+  logger = new require('toplog')({
+    concern: 'test',
+    loglevel: util.config.get('modules.test.loglevel', util.config.get('loglevel', 'INFO'))
+  });
+  
   alias('profile', 'tpt.profile');
   alias('profile1', 'tpt.tptnet-profile');
   alias('saveid', 'tpt.save');

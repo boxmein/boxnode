@@ -8,7 +8,7 @@
 var _ = require('underscore');
 var crypto = require('crypto');
 var toplog = require('toplog');
-var logger = new toplog({ concern: 'mangler' });
+var logger;
 
 exports.type = 'command';
 
@@ -68,7 +68,10 @@ exports.listener = function(line, words, respond) {
 
 
 exports.init = function(util, addAlias) {
-  logger.currprops.loglevel = util.config.get('loglevels.mangler', 'VERBOSE');
+  logger = new require('toplog')({
+    concern: 'convert',
+    loglevel: u.config.get('modules.convert.loglevel', u.config.get('loglevel', 'INFO'));
+  });
 };
 
 

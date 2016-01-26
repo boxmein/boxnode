@@ -51,6 +51,9 @@ exports.listener = function(line, words, respond, util) {
   }
 };
 
-exports.init = function(util, addAlias) {
-
+exports.init = function(u, addAlias) {
+  logger = new require('toplog')({
+    concern: 'convert',
+    loglevel: u.config.get('modules.convert.loglevel', u.config.get('loglevel', 'INFO'));
+  });
 };

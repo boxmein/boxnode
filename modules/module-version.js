@@ -10,11 +10,7 @@ exports.getHelp = function() {
   };
 };
 
-
-exports.listener = function(line, words, respond) {
-  respond(getMessage());
-};
-
-exports.init = function(util, alias) {
-  getMessage = util.config.get.bind(util.config, 'modules.version.str');
+var getMessage;
+exports.listener = function(line, words, respond, util) {
+  respond(util.config.get('modules.version.str'));
 };

@@ -1,11 +1,18 @@
 
-var logger = new require('toplog')({concern: 'convert', loglevel: 'VERBOSE'});
+var logger;
 var nodeutil = require('util');
 
 exports.type = 'command';
 
 exports.listAll = function() {
   return Object.keys(exports.getHelp());
+};
+
+exports.init = function(u) {
+  logger = new require('toplog')({
+    concern: 'convert',
+    loglevel: u.config.get('modules.convert.loglevel', u.config.get('loglevel', 'INFO'))
+  });
 };
 
 exports.getHelp = function() {

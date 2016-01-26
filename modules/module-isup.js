@@ -1,5 +1,5 @@
 var net = require('net');
-var logger = new require('toplog')({concern: 'isup', loglevel: 'INFO'});
+var logger;
 
 exports.type = 'command';
 
@@ -11,6 +11,13 @@ exports.getHelp = function() {
   return {
     '*': '`isup <domain>` - Check if a website is up. (up = accepts connections on port 80)'
   };
+};
+
+exports.init = function(u) {
+  logger = new require('toplog')({
+    concern: 'isup',
+    loglevel: u.config.get('modules.isup.loglevel', u.config.get('loglevel', 'INFO'))
+  });
 };
 
 exports.listener = function(line, words, respond, util) {

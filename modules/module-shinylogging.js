@@ -4,10 +4,7 @@
 exports.type = 'event';
 
 var util = require('util');
-var toplog = require('toplog');
-
-var logger = new toplog({concern: 'irc'});
-logger.properties.colors.INFO = '37;1';
+var logger;
 
 // events for which we'll just log all parameters
 var ircEventParamLog = ['ISupport', 'MOTD', 'EndOfMOTD', 'LUserChannels',
@@ -15,6 +12,12 @@ var ircEventParamLog = ['ISupport', 'MOTD', 'EndOfMOTD', 'LUserChannels',
     'EndOfNames', 'Created', 'VHostAssigned'];
 
 exports.init = function(app, irc, command, u) {
+  logger = new require('toplog')({
+    concern: 'irc',
+    loglevel: u.config.get('modules.shinylogging.loglevel', u.config.get('loglevel', 'INFO'))
+  });
+
+  logger.properties.colors.INFO = '37;1';
 
   app.onAny(function() {
     var evt = this.event;
@@ -37,14 +40,12 @@ exports.init = function(app, irc, command, u) {
     }
 
     else {
-      if (u.config.get('loglevel') >= 3 && evt != 'sock.data')
-        logger.verbose('(app) ' + evt + ' ' + arguments);
+      logger.verbose("(app) " + evt + " " + arguments);
     }
   });
 
   command.onAny(function(ircline) {
     var evt = this.event;
-    debugger;
     logger.verbose('\x1b[37;0m' + ircline.prefix + ' is using ' + evt + '('+ircline.params[1]+')');
   });
 
