@@ -788,6 +788,7 @@ app.events.on('module.new', function onNewModule(name) {
   }
   catch (err) {
     logger.error('Failed to load module `'+name+'`: ' + err.message);
+    logger.error(err.stack);
     app.events.emit('module.loadfail', name, err);
     return;
   }
@@ -1184,6 +1185,7 @@ config.get('modules_enabled').forEach(function onModuleEnable(ea) {
 
 process.on('uncaughtException', function onUncaughtException(err) {
   logger.fatal('uncaught exception: ' + err.message);
+  logger.verbose(err.stack);
   logger.verbose(require('util').inspect(err));
   app.events.emit('quit.crash');
 });
