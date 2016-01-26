@@ -362,15 +362,116 @@ function getNames(channel, force_update) {
   return def.promise;
 }
 
-app.util.parseIRCLine = parseIRCLine;
-app.util.matchesHostname = matchesHostname;
-app.util.getNames = getNames;
-app.util.isChannel = isChannel;
-app.util.getJSON = getJSON;
-app.util.padLeft = padLeft;
-app.util.superStrip = superStrip;
-app.util.trim = trim;
+/**
+ * Wait for a response from a particular user specified via hostmask pattern.
+ * @param from {String} hostmask pattern with * as wildcards, otherwise regexy
+ * @param timeout {Number} a number of seconds to wait before rejecting 
+ * @returns Promise that resolves with the IRC line object and rejects with 'timeout' otherwise.
+ */
+function waitForResponse(from, timeout) {
+  
+  if (!timeout || timeout <= 0) 
+    timeout = 30;
+  
+  var def = Q.defer();
+  var startTime = Date.now() / 1000.0;
 
+  app.ircevents.on('PRIVMSG', function response(line) {
+    if (util.matchesHostname(from, line.hostmask)) {
+      def.resolve(line);
+    } else {
+      var timeNow = Date.now() / 1000.0;
+      if (startTime + timeout < timeNow) {
+        app.ircevents.off('PRIVMSG', response);
+        def.reject('timeout');
+      }
+    }
+  });
+
+  return def;
+}
+
+
+// Emit a fake command event.
+// You gotta specify your own IRC line and respond() function.
+function fakeEmit(command, line, words, resp) {
+  words[0] = app.config.get('command_character', '\\') + command;
+  // remove leading asterisks to prevent running all commands
+  app.commandevents.emit(unalias(command).replace(/^\*+/g, ''),
+    line, words, resp, app.util);
+}
+
+
+// is this nickname an operator in that channel?
+// returns a promise!
+function isOperatorIn(nick, channel) {
+  return getNames(channel).then(function(names) {
+    return !!_.any(names, function(each) {
+      return each.indexOf(nick) === 1 &&
+             each[0] == app.state.OP_CHAR;
+    });
+  });
+}
+
+/**
+ * Returns a promise that resolves to true if the input user is voiced in that
+ * channel.
+ * @param nick {String} the nickname of the user to check for (not a hostmask)
+ * @param channel {String} the channel to check for
+ * @returns {Promise} a promise that resolves to a boolean
+ */
+function isVoiceIn(nick, channel) {
+  return getNames(channel).then(function(names) {
+    return !!_.any(names, function(each) {
+       return each.indexOf(nick) === 1 &&
+              each[0] == app.state.VOICE_CHAR;
+    });
+  });
+}
+
+/**
+ * Staggers function calls over time. ie, for a delay of 0.5s, it calls the 
+ * function once per 0.5 seconds but will apply every call made to it. This is
+ * in contrast to _.debounce which just ignores calls made during the period.
+ * @param func {Function} the function to call
+ * @param delay {number} the delay in milliseconds
+ * @param thisObj {object} a "this"-object to pass to the function. You could 
+ *                         ignore this property entirely if you use Function#bind.
+ * @returns {Function} a new function with the desired property
+ */
+function funcStagger(func, delay, thisObj) {
+  // queue of function arguments
+  var queue = [];
+  var performing = false;
+
+  function startPerforming() {
+    if (performing) return;
+    performing = true;
+
+    setTimeout(callFunc, delay);
+  }
+
+  function callFunc() {
+    var a = queue.shift();
+
+    if (a) {
+      func.apply(thisObj, a);
+      if (queue.length > 0) {
+        setTimeout(callFunc, delay);
+      } else {
+        performing = false;
+      }
+    }
+  }
+
+  return function() {
+    queue.push(arguments);
+
+    if (!performing) {
+      startPerforming();
+    }
+  };
+}
 
 // respond function.
 
@@ -381,7 +482,7 @@ function respond(channel, nick, data) {
   respond.PRIVMSG(channel, nick + ': ' + data);
 }
 
-// Send PRIVMSG to anything
+/** Send a message in <channel> with <data>. */
 respond.PRIVMSG = function(channel, data) {
   respond.RAW('PRIVMSG ' + channel + ' :' + data);
 };
@@ -403,16 +504,12 @@ respond.RAW = function(data) {
   writeToSocket(data.replace(/[\r\n]/g, '').slice(0, 511));
 };
 
-app.util.respond = respond;
-
 // Alias system
 
 function addAlias(from, to) {
   logger.debug('Added alias: ' + from + ' -> ' + to);
   app.aliases[from] = to;
 }
-
-app.util.addAlias = addAlias;
 
 function deleteAlias(from) {
   logger.debug('Removed alias: ' + from);
@@ -433,46 +530,33 @@ function unalias(aliased) {
   return unaliased;
 }
 
-// Emit a fake command event.
-// You gotta specify your own IRC line and respond() function.
-function fakeEmit(command, line, words, resp) {
-  words[0] = app.config.get('command_character', '\\') + command;
-  // remove leading asterisks to prevent running all commands
-  app.commandevents.emit(unalias(command).replace(/^\*+/g, ''),
-    line, words, resp, app.util);
-}
 
+app.util.parseIRCLine = parseIRCLine;
+app.util.matchesHostname = matchesHostname;
+app.util.getNames = getNames;
+app.util.isChannel = isChannel;
+app.util.getJSON = getJSON;
+app.util.padLeft = padLeft;
+app.util.superStrip = superStrip;
+app.util.trim = trim;
+app.util.waitForResponse = waitForResponse;
+app.util.funcStagger = funcStagger;
+app.util.respond = respond;
+app.util.addAlias = addAlias;
 app.util.fakeEmit = fakeEmit;
-
-
-// is this nickname an operator in that channel?
-// returns a promise!
-function isOperatorIn(nick, channel) {
-  return getNames(channel).then(function(names) {
-    return !!_.any(names, function(each) {
-      return each.indexOf(nick) === 1 &&
-             each[0] == app.state.OP_CHAR;
-    });
-  });
-}
-
-// is this nickname voiced in that channel?
-// returns a promise!
-function isVoiceIn(nick, channel) {
-  return getNames(channel).then(function(names) {
-    return !!_.any(names, function(each) {
-       return each.indexOf(nick) === 1 &&
-              each[0] == app.state.VOICE_CHAR;
-    });
-  });
-}
-
 app.util.isOperatorIn = isOperatorIn;
 app.util.isVoiceIn = isVoiceIn;
+
+
+
+
+
 
 //
 // Event handlers
 //
+
+
 
 
 // Connection handshake
