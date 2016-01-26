@@ -16,20 +16,8 @@ server_password:
 # Are we debugging?
 debug: true
 
-# Set log levels for every module separately
-# Default log levels:
-# FATAL, ERROR, WARNING, INFO, DEBUG, VERBOSE
-loglevels:
-  irc: VERBOSE
-  config_manager: DEBUG
-  autorejoin: INFO
-  google: VERBOSE
-  invitefollow: INFO
-  js: INFO
-  mangler: INFO
-  numbers: INFO
-  operator: VERBOSE
-  rpn: VERBOSE
+# Global log level, used when not overridden by module specific configuration
+loglevel: INFO
 
 # MOTD. gets displayed into the console on startup if not empty
 motd:
@@ -51,35 +39,22 @@ auth:
 # Command character to respond to
 command_character: "\\"
 
-# tell people your command character
-# if the nickname and one of the following words is in a single line:
-# 'character', 'command', 'control'
-announce_character: true
-announce_message: "i can be controlled with the following prefix: %char"
-
 # announce when a module throws an uncaught exception
 # this disables the module.
 announce_module_crash: true
 announce_module_message: "your command crashed '%module' - it was disabled!"
 
-# automatically rejoin channels you've been kicked from
-autorejoin: true
-# (seconds)
-autorejoin_delay: 5
-
-# follow invites to other channels
-follow_invites: false
-
 # Modules to load on startup.
 modules_enabled:
+  - autorejoin
+  - invitefollow
   - test
   - hello
   - nickometer
   - logging
 
-# Channels to join: a list of objects with name being the channel name.
-# Future feature is that you could configure global properties specific
-# to different channels, eg the command character.
+# Channels to join: if this list were a JSON list it would look like this:
+# "channels": [ { "name": "##boxmein" } ], so use the equivalent YAML!
 channels:
   - name: "##boxmein"
 
@@ -88,56 +63,63 @@ channels:
 # configure a module. Modules should define reasonable defaults.
 modules:
 
+  # 
   # Test module: outputs this string with %cmd replaced by the exact command
-  # eg if \test.asdf is called, %cmd is replaced by "test.asdf"
+  # eg if \test.asdf is called, %cmd is replaced by "test.asdf" and so the bot
+  # replies "hello! the command you entered is test.asdf"
   test:
     message: "hello! the command you entered is %cmd"
     # messages to say when the user runs `test.potato`.
     potatoes:
       - "Oh hi! How are you holding up? Because I'M A POTATO."
 
-  # System module: stuff like quit / eval / join / nick / mode
+  # 
+  # System module: stuff like quit / eval / join / nick / mode are in this. only
+  # authorize very very trusted users (full code access to the system!!)
   system:
     # Authorized to use the system module.
     authorized:
       - "*!*@unaffiliated/boxmein"
       - "*!*@unaffiliated/ristovski"
 
-  # Roulette module: a game of russian roulette (and other deadlies)
+  # 
+  # Roulette module: a game of russian roulette (and other deadlies). 
   roulette:
-    # Punishment types
+    # This is how the user is punished for failing a roulette shot.
     punishment:
       # kick / kickban / ban
       type: kickban
-      # seconds
+      # in seconds
       ban_duration: 30
 
-    # Chances that something happens
+    # How likely is it that each of the following chances happens:
     chances:
-      # 1/6 chance of backfiring
+      # 1/6 chance of shooting yourself in the face.
       russian: 0.166666
-      # 1/20 chance of kicking someone
+      # 1/20 chance of kicking your desired target
       chancekick: 0.05
       # 1/4 chance of backfire
       chancekick_backfire: 0.25
 
-  # Operator module: who are allowed to use op commands
+  # 
+  # Operator module: who are allowed to use op commands (voice/op/kick/ban)
   operator:
-    # Always respond even to invalid calls
+    # Always respond with a message, even to invalid calls
     loud: true
-    # Chanops can use operator commands
+    # Channel operators can use operator commands
     ops_allowed: true
     # Channel voices can use operator commands
     voices_allowed: true
-    # The bot is not an operator
+    # Message to display when this bot tries to do stuff but isn't opped
     not_an_op: "I'm not an operator!"
-    # Someone is not allowed to perform this
+    # Message to display when someone tries something
     not_allowed: "Not allowed :D"
-    # Always authorized to perform op commands
+    # List of hostmask patterns for people who are always authorized to do stuff
     authorized:
       - "*!*@unaffiliated/boxmein"
 
-  # RPN calculator module
+  # 
+  # A reverse-polish-notation calculator
   rpn:
     # Nesting limit for user-defined commands
     stack_max: 100
@@ -145,31 +127,35 @@ modules:
       # Authorized to create user-defined commands
       - "*!*@unaffiliated/boxmein"
 
-  # Bug logger
+  # 
+  # Bug reporting tool
   bug:
-    # People who don't get to use bug logger commands
+    # People who don't get to use bug reporting commands
     ignored:
       - "secondbox!*@*"
 
-  # YouTube title outputter
+  # 
+  # Module that outputs titles and general info for youtube videos.
   yt:
     # YouTube Data API v3 key
     api_key: ""
     # HTTP headers to add to the request
     headers:
-    # channel whitelist (where it is enabled)
+    
+    # Which channels is this thing enabled in, or do we filter at all?
     whitelist: true
     channel_whitelist:
       - "##boxmein"
 
-  # Outputs the version
+  # Outputs the version string of this bot 
   version:
     str: "boxnode v3 <todo edit version string>"
 
   # TPT module - interop with powder toy forums
   tpt:
-    # a key to encrypt the session storage
+    # a key to encrypt the session storage 
     sessionstore_key:
+
     # an endpoint for API calls, prefixed to other URLs
     endpoint:
       official: "http://powdertoy.co.uk"
@@ -200,9 +186,31 @@ modules:
         lin64: "http://thepowdertoy.net/Downloads/powder-linux64.zip"
         mac: "http://thepowdertoy.net/Downloads/powder-mac.zip"
 
+  # 
+  # Sends a message saying boxnode's command character, when someone asks
   commandchar:
+    # the message to send!
     message: "all commands for me start with the %char character. try out %charlist and %charhelp!"
+    # "how do you control boxnode" matches because this word is in the list
     match_words:
       - control
       - character
       - prefix
+
+  # 
+  # a module that responds to "hi boxnode" with friendly greetings
+  autohello:
+    message: "%rand_hello %nick!"
+    hellos:
+      - hi
+      - hello
+      - sup
+      - yo
+      - what's up
+      - how's it hanging
+      - what's new
+      - how you been
+    match_words:
+      - hello
+      - hi
+      - sup
